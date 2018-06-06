@@ -1,9 +1,8 @@
 '''Simple starter flask app'''
 from flask import Flask, request, redirect, url_for
 from werkzeug.utils import secure_filename
-import database
+from src.foodie.database import database
 
-database.import_restaurant()
 APP = Flask(__name__)
 
 
@@ -23,8 +22,8 @@ def photo_upload():
     return redirect(url_for('photo_upload', filename=filename))
 
 
-@APP.route('/new/restaurant/', methods=['POST'])
-def new_restaurant():
+@APP.route('/restaurant/', methods=['POST'])  # TODO jack
+def insert_restaurant():
     '''new restaurant scheme'''
     print(request)
     return 'Hello world'

@@ -6,4 +6,3 @@
     sha: 'f431e1c6991b21e828e28e73c38596bc5bf57525'
     hooks:
     -   id: pylint
-
