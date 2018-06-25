@@ -19,4 +19,4 @@ run:
 
 .PHONY: test
 test:
-	pytest
+	source env/bin/activate && pytest

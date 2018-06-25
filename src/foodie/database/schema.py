@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, ForeignKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
 
 BASE = declarative_base()
@@ -15,13 +15,58 @@ class Restaurant(BASE):
     phone_number = Column(Integer, nullable=True)
 
 
-class MenuItem(BASE):
-    __tablename__ = 'menuitems'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+class MenuSection(BASE):
+    __tablename__ = 'menusections'
     restaurant_id = Column(
         Integer,
         ForeignKey("restaurants.id"),
         nullable=False,
         primary_key=True,
         autoincrement=False)
+    name = Column(String, nullable=False, primary_key=True)
+
+
+class MenuItem(BASE):
+    __tablename__ = 'menuitems'
+    restaurant_id = Column(
+        Integer,
+        ForeignKey("restaurants.id"),
+        nullable=False,
+        primary_key=True,
+        autoincrement=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    price = Column(Float, nullable=True)
+
+    @property
+    def serialize(self):
+        return {
+            'name': self.name,
+        }
+
+
+class MenuSectionAssignment(BASE):
+    __tablename__ = 'menusectionassignemnts'
+    restaurant_id = Column(Integer, primary_key=True, nullable=False)
+    section_name = Column(String, primary_key=True, nullable=False)
+    menu_item_id = Column(Integer, primary_key=True, nullable=False)
+    __table_args__ = (ForeignKeyConstraint(
+        [menu_item_id, restaurant_id], [MenuItem.id, MenuItem.restaurant_id]),
+                      ForeignKeyConstraint(
+                          [section_name, restaurant_id],
+                          [MenuSection.name, MenuSection.restaurant_id]))
+
+
+class ItemImage(BASE):
+    __tablename__ = 'itemimages'
+    link = Column(String, primary_key=True, nullable=False)
+    menu_item_id = Column(Integer, primary_key=True, nullable=False)
+    restaurant_id = Column(Integer, primary_key=True, nullable=False)
+    __table_args__ = (ForeignKeyConstraint(
+        (menu_item_id, restaurant_id),
+        (MenuItem.id, MenuItem.restaurant_id)), )
+
+    @property
+    def serialize(self):
+        return {'link': self.link}
