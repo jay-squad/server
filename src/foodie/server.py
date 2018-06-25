@@ -1,5 +1,5 @@
 '''Simple starter flask app'''
-from flask import Flask, request, redirect, url_for
+from flask import Flask, request, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
 from src.foodie.database import database
 
@@ -29,4 +29,19 @@ def insert_restaurant():
     return 'Hello world'
 
 
-# APP.run(host='0.0.0.0')
+@APP.route('/restaurant/', methods=['GET'])  # TODO jack
+def get_restaurant_menu():
+    '''new restaurant scheme'''
+    menu_sections = database.get_restaurant_menu_items(1)
+    print(menu_sections)
+    return jsonify([{
+        "section_name":
+        menu_section.name,
+        "item_list": [{
+            "name": item.name,
+            "image": image.link,
+        } for item, image in item_list]
+    } for menu_section, item_list in menu_sections])
+
+
+APP.run(host='0.0.0.0')
