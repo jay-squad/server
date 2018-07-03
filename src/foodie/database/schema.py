@@ -19,7 +19,7 @@ class MenuSection(BASE):
     __tablename__ = 'menusections'
     restaurant_id = Column(
         Integer,
-        ForeignKey("restaurants.id"),
+        ForeignKey("restaurants.id", ondelete='CASCADE'),
         nullable=False,
         primary_key=True,
         autoincrement=False)
@@ -30,7 +30,7 @@ class MenuItem(BASE):
     __tablename__ = 'menuitems'
     restaurant_id = Column(
         Integer,
-        ForeignKey("restaurants.id"),
+        ForeignKey("restaurants.id", ondelete='CASCADE'),
         nullable=False,
         primary_key=True,
         autoincrement=False)
@@ -39,12 +39,6 @@ class MenuItem(BASE):
     description = Column(String, nullable=True)
     price = Column(Float, nullable=True)
 
-    @property
-    def serialize(self):
-        return {
-            'name': self.name,
-        }
-
 
 class MenuSectionAssignment(BASE):
     __tablename__ = 'menusectionassignemnts'
@@ -52,10 +46,12 @@ class MenuSectionAssignment(BASE):
     section_name = Column(String, primary_key=True, nullable=False)
     menu_item_id = Column(Integer, primary_key=True, nullable=False)
     __table_args__ = (ForeignKeyConstraint(
-        [menu_item_id, restaurant_id], [MenuItem.id, MenuItem.restaurant_id]),
+        [menu_item_id, restaurant_id], [MenuItem.id, MenuItem.restaurant_id],
+        ondelete='CASCADE'),
                       ForeignKeyConstraint(
                           [section_name, restaurant_id],
-                          [MenuSection.name, MenuSection.restaurant_id]))
+                          [MenuSection.name, MenuSection.restaurant_id],
+                          ondelete='CASCADE'))
 
 
 class ItemImage(BASE):
@@ -64,9 +60,5 @@ class ItemImage(BASE):
     menu_item_id = Column(Integer, primary_key=True, nullable=False)
     restaurant_id = Column(Integer, primary_key=True, nullable=False)
     __table_args__ = (ForeignKeyConstraint(
-        (menu_item_id, restaurant_id),
-        (MenuItem.id, MenuItem.restaurant_id)), )
-
-    @property
-    def serialize(self):
-        return {'link': self.link}
+        (menu_item_id, restaurant_id), (MenuItem.id, MenuItem.restaurant_id),
+        ondelete='CASCADE'), )
