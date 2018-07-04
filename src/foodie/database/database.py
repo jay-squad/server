@@ -1,10 +1,12 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 from src.foodie.database.schema import Restaurant, MenuSection, MenuItem, MenuSectionAssignment, ItemImage
 
-engine = create_engine("postgresql://admin:password@localhost/testdb")
+import src.foodie.settings.settings  # pylint: disable=unused-import
+import os
+
+engine = create_engine(os.environ['DATABASE_URL'])
 session = sessionmaker(bind=engine, autocommit=True)()
-sess = Session(engine)
 
 
 def _add_and_commit(model):
@@ -63,18 +65,24 @@ def insert_new_item(restaurant_id,
 
 def get_restaurant_by_id(restaurant_id):
     with session.begin():
-        return sess.query(Restaurant)\
+        return session.query(Restaurant)\
             .filter(Restaurant.id == restaurant_id).one()
 
 
 def get_restaurant_by_name(restaurant_name):
     with session.begin():
-        return sess.query(Restaurant)\
-            .filter(Restaurant.name.like('%%%s%%' % restaurant_name)).all()
+        return session.query(Restaurant)\
+            .filter(Restaurant.name.ilike('%%%s%%' % restaurant_name)).all()
+
+
+def get_menu_item_by_name(menu_item_name):
+    with session.begin():
+        return session.query(MenuItem)\
+        .filter(MenuItem.name.ilike('%%%s%%' % menu_item_name)).all()
 
 
 def get_menu_section(restaurant_id, section_name):
-    return sess.query(MenuItem, ItemImage) \
+    return session.query(MenuItem, ItemImage) \
         .join(ItemImage) \
         .join(MenuSectionAssignment)\
         .filter(MenuItem.restaurant_id == restaurant_id)\
@@ -82,15 +90,15 @@ def get_menu_section(restaurant_id, section_name):
 
 
 def get_sectionless_items(restaurant_id):
-    return sess.query(MenuItem, ItemImage) \
+    return session.query(MenuItem, ItemImage) \
         .join(ItemImage)\
         .outerjoin(MenuSectionAssignment)\
         .filter(MenuItem.restaurant_id == restaurant_id)\
-        .filter(MenuSectionAssignment.section_name == None).all()
+        .filter(MenuSectionAssignment.section_name is None).all()
 
 
 def get_restaurant_menu_items(restaurant_id):
-    menu_sections = sess.query(MenuSection).filter(
+    menu_sections = session.query(MenuSection).filter(
         MenuSection.restaurant_id == restaurant_id).all()
 
     return [(menu_section, get_menu_section(restaurant_id, menu_section.name))
