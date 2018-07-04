@@ -1,22 +1,14 @@
 '''Simple starter flask app'''
-from flask import Flask, request, redirect, url_for, jsonify
-from werkzeug.utils import secure_filename
+import os
+from flask import Flask, request, jsonify
 from src.foodie.database import database
 from src.foodie.database import marshmallow_schema
 from src.foodie.search import search
+import src.foodie.settings.settings  # pylint: disable=unused-import
+
 APP = Flask(__name__)
 
-#TODO authentication
-
-
-@APP.route('/upload', methods=['POST'])
-def photo_upload():
-    '''upload photo path'''
-    print(request.files)
-    file = request.files['file']
-    filename = secure_filename(file.filename)
-    file.save(filename)
-    return redirect(url_for('photo_upload', filename=filename))
+# TODO authentication
 
 
 @APP.route('/restaurant', methods=['POST'])
@@ -84,4 +76,12 @@ def search_restaurant(query):
     ])
 
 
-APP.run(host='0.0.0.0')
+@APP.route('/search/item/<query>', methods=['GET'])
+def search_menu_item(query):
+    return jsonify([
+        marshmallow_schema.MenuItemSchema().dump(item).data
+        for item in search.find_menu_item(query)
+    ])
+
+
+APP.run(host='0.0.0.0', port=os.environ['PORT'])
