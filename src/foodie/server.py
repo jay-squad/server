@@ -57,14 +57,13 @@ def get_restaurant(restaurant_id):
 def get_restaurant_menu(restaurant_id):
     '''get a specific restaurant item scheme'''
     menu_sections = database.get_restaurant_menu_items(restaurant_id)
-    return jsonify(
-        dict([(menu_section.name if menu_section is not None else '', [{
-            "item":
-            marshmallow_schema.MenuItemSchema().dump(item).data,
-            "image":
-            marshmallow_schema.ItemImageSchema().dump(image).data,
-        } for item, image in item_list])
-              for menu_section, item_list in menu_sections]))
+    return jsonify([(menu_section.name if menu_section is not None else '', [{
+        "item":
+        marshmallow_schema.MenuItemSchema().dump(item).data,
+        "image":
+        marshmallow_schema.ItemImageSchema().dump(image).data,
+    } for item, image in item_list])
+                    for menu_section, item_list in menu_sections])
 
 
 @APP.route('/search/restaurant/<query>', methods=['GET'])
