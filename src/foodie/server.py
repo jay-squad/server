@@ -37,15 +37,14 @@ def insert_menu_item(restaurant_id):
 
 
 @APP.route('/restaurant/<restaurant_id>/item/<menu_item_id>', methods=['PUT'])
-def update_menu_item(restaurant_id, menu_item_id):
-    print(request.form['item_image'])
+def upload_menu_item_images(restaurant_id, menu_item_id):
     if 'item_image' in request.form:
         for image in request.form.getlist('item_image'):
             database.insert_item_image(
                 restaurant_id=restaurant_id,
                 menu_item_id=menu_item_id,
                 link=image)
-    return 'OK'
+    return database.get_menu_item_by_id(restaurant_id, menu_item_id)
 
 
 @APP.route('/restaurant/<restaurant_id>', methods=['GET'])
