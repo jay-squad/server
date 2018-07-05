@@ -1,9 +1,9 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from src.foodie.database.schema import Restaurant, MenuSection, MenuItem, MenuSectionAssignment, ItemImage
 
 import src.foodie.settings.settings  # pylint: disable=unused-import
-import os
 
 engine = create_engine(os.environ['DATABASE_URL'])
 session = sessionmaker(bind=engine, autocommit=True)()
@@ -73,6 +73,13 @@ def get_restaurant_by_name(restaurant_name):
     with session.begin():
         return session.query(Restaurant)\
             .filter(Restaurant.name.ilike('%%%s%%' % restaurant_name)).all()
+
+
+def get_menu_item_by_id(restaurant_id, menu_item_id):
+    with session.begin():
+        return session.query(MenuItem)\
+        .filter(MenuItem.restaurant_id == restaurant_id)\
+        .filter(MenuItem.id == menu_item_id).one()
 
 
 def get_menu_item_by_name(menu_item_name):
