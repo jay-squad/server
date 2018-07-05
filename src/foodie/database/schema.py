@@ -13,6 +13,7 @@ class Restaurant(BASE):
     description = Column(String, nullable=True)
     website = Column(String, nullable=True)
     phone_number = Column(Integer, nullable=True)
+    cuisine_type = Column(String, nullable=True)
 
 
 class MenuSection(BASE):

@@ -84,8 +84,9 @@ def get_menu_item_by_id(restaurant_id, menu_item_id):
 
 def get_menu_item_by_name(menu_item_name):
     with session.begin():
-        return session.query(MenuItem)\
-        .filter(MenuItem.name.ilike('%%%s%%' % menu_item_name)).all()
+        return session.query(MenuItem, ItemImage)\
+        .filter(MenuItem.name.ilike('%%%s%%' % menu_item_name))\
+            .join(ItemImage).all()
 
 
 def get_menu_section(restaurant_id, section_name):

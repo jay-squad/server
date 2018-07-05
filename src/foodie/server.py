@@ -77,10 +77,12 @@ def search_restaurant(query):
 
 @APP.route('/search/item/<query>', methods=['GET'])
 def search_menu_item(query):
-    return jsonify([
-        marshmallow_schema.MenuItemSchema().dump(item).data
-        for item in search.find_menu_item(query)
-    ])
+    return jsonify([{
+        "item":
+        marshmallow_schema.MenuItemSchema().dump(item).data,
+        "image":
+        marshmallow_schema.ItemImageSchema().dump(image).data
+    } for item, image in search.find_menu_item(query)])
 
 
 APP.run(host='0.0.0.0', port=os.environ['PORT'])
