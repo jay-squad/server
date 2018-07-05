@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import sessionmaker
 from src.foodie.database.schema import Restaurant, MenuSection, MenuItem, MenuSectionAssignment, ItemImage
 
@@ -72,7 +72,7 @@ def get_restaurant_by_id(restaurant_id):
 def get_restaurant_by_name(restaurant_name):
     with session.begin():
         return session.query(Restaurant)\
-            .filter(Restaurant.name.ilike('%%%s%%' % restaurant_name)).all()
+            .filter(or_(Restaurant.name.ilike('%%%s%%' % restaurant_name), Restaurant.cuisine_type.ilike('%%%s%%' % restaurant_name))).all()
 
 
 def get_menu_item_by_id(restaurant_id, menu_item_id):
