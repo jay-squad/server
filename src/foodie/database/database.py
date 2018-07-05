@@ -41,11 +41,13 @@ def insert_new_item(restaurant_id,
                     item_name,
                     item_image,
                     description=None,
+                    price=None,
                     section_name=None):
     with session.begin():
         menu_item = MenuItem(
             restaurant_id=restaurant_id,
             name=item_name,
+            price=price,
             description=description)
         session.add(menu_item)
         session.flush()
