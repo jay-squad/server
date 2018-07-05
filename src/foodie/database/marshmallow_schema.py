@@ -10,7 +10,6 @@ class NormalizedString(fields.String):
         super(fields.String, self).__init__(**kargs)
 
     def serialize(self, attr, obj, accessor=None):
-        print(self.__dict__)
         return obj.__getattribute__(self._attribute).title()
 
 
