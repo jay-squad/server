@@ -1,7 +1,7 @@
-from src.foodie.server import APP
-from flask import request
 import json
 import pytest
+
+from src.foodie.server import APP
 
 
 @pytest.fixture
@@ -17,7 +17,7 @@ def client(request):
 
 def post_json(client, url, json_dict):
     """Send dictionary json_dict as a json to the specified url """
-    return client.post(url, json=json.dumps(json_dict))
+    return client.post(url, data=json_dict)
 
 
 def json_of_response(response):
@@ -30,11 +30,9 @@ def test_json(client):
         client, '/restaurant', {
             "cuisine_type": "Sushi",
             "description": None,
-            "id": 5,
             "latitude": 43.4729392,
             "longitude": -80.5375325,
             "name": "Mr Sushi",
-            "normalized_name": "Mr Sushi",
             "phone_number": "(226) 647-5525",
             "website": None
         })

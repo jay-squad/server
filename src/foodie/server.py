@@ -1,5 +1,4 @@
 '''Simple starter flask app'''
-import os
 from flask import Flask, request, jsonify
 from src.foodie.database import database
 from src.foodie.database import marshmallow_schema
@@ -89,6 +88,3 @@ def search_menu_item(query):
         "image":
         marshmallow_schema.ItemImageSchema().dump(image).data
     } for item, image in search.find_menu_item(query)])
-
-
-APP.run(host='0.0.0.0', port=os.environ['PORT'])

@@ -1,7 +1,6 @@
 from src.foodie.database.schema import BASE
 from src.foodie.database import database
 from sqlalchemy import create_engine
-from flask import jsonify
 
 
 def test_schema_init():
