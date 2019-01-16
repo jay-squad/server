@@ -7,7 +7,7 @@ from src.foodie.database.schema import Restaurant, MenuSection, MenuItem, MenuSe
 import src.foodie.settings.settings  # pylint: disable=unused-import
 
 engine = create_engine(os.environ['DATABASE_URL'])
-session_factory = sessionmaker(bind=engine, autocommit=True)()
+session_factory = sessionmaker(bind=engine, autocommit=True)
 
 
 def _add_and_commit(model):
