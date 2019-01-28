@@ -1,1 +1,1 @@
-web: python3 -m src.foodie.run_server
+web: python3 -m src.foodie.server
