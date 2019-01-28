@@ -14,7 +14,7 @@ install: python-install postgres-install
 
 .PHONY: run
 run:
-	source env/bin/activate && python3 -m src.foodie.run_server
+	source env/bin/activate && python3 -m src.foodie.server
 
 
 .PHONY: test
