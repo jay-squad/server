@@ -4,6 +4,14 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, For
 from sqlalchemy.ext.declarative import declarative_base
 
 BASE = declarative_base()
+BASE.created_at = Column(
+    DateTime, default=datetime.datetime.utcnow, nullable=False)
+BASE.updated_at = Column(
+    DateTime,
+    default=datetime.datetime.utcnow,
+    nullable=False,
+    onupdate=datetime.datetime.utcnow,
+)
 
 
 class Restaurant(BASE):
@@ -70,14 +78,6 @@ class ItemImage(BASE):
 class FBUser(BASE):
     __tablename__ = 'fbusers'
     id = Column(String, nullable=False, primary_key=True)
-    created = Column(
-        DateTime, default=datetime.datetime.utcnow, nullable=False)
-    updated = Column(
-        DateTime,
-        default=datetime.datetime.utcnow,
-        nullable=False,
-        onupdate=datetime.datetime.utcnow,
-    )
     name = Column(String, nullable=False)
     profile_url = Column(String, nullable=False)
     access_token = Column(String, nullable=False)
