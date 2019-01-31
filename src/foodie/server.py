@@ -1,5 +1,6 @@
 '''Simple starter flask app'''
 import os
+import requests
 
 from flask import Flask, request, jsonify, session, g
 from src.foodie.database import database
@@ -109,24 +110,38 @@ def get_current_user():
 
     # Set the user in the session dictionary as a global g.user and bail out
     # of this function early.
+    fb_base_url = "https://graph.facebook.com"
+    if not g.access_token:
+        g.access_token = requests.get(
+            "{0}/oauth/access_token".format(fb_base_url), {
+                "client_id": FB_APP_ID,
+                "client_secret": FB_APP_SECRET,
+                "grant_type": "client_credentials",
+            }).json()["access_token"]
+
     if session.get("fb_user"):
         g.fb_user = session.get("user")
         return
 
     # Attempt to get the short term access token for the current fb_user.
-    result = facebook.get_user_from_cookie(
-        cookies=request.cookies, app_id=FB_APP_ID, app_secret=FB_APP_SECRET)
+    profile = None
+    if "fb_accesss_token" in requests.cookies:
+        user_access_token = request.cookies["fb_accesss_token"]["value"]
+        response = requests.get("{0}/me".format(fb_base_url), {
+            "input_token": user_access_token,
+            "accesss_token": g.access_token
+        })
+        if response.ok:
+            profile = response.json()
 
     # If there is no result, we assume the user is not logged in.
-    if result:
+    if profile:
         # Check to see if this fb_user is already in our database.
-        fb_user = User.query.filter(User.id == result["uid"]).first()
+        fb_user = User.query.filter(User.id == profile["uid"]).first()
 
         with database.SESSION_FACTORY.begin():
             if not fb_user:
                 # Not an existing fb_user so get info
-                graph = GraphAPI(result["access_token"])
-                profile = graph.get_object("me")
                 if "link" not in profile:
                     profile["link"] = ""
 
@@ -135,12 +150,11 @@ def get_current_user():
                     id=str(profile["id"]),
                     name=profile["name"],
                     profile_url=profile["link"],
-                    access_token=result["access_token"],
-                )
+                    access_token=request.cookies["fb_access_token"]["value"])
                 database.SESSION_FACTORY.add(fb_user)
-            elif fb_user.access_token != result["access_token"]:
+            elif fb_user.access_token != user_access_token:
                 # If an existing fb_user, update the access token
-                fb_user.access_token = result["access_token"]
+                fb_user.access_token = user_access_token
 
             # Add the fb_user to the current session
             session["fb_user"] = dict(

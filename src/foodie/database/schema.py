@@ -14,6 +14,14 @@ BASE.updated_at = Column(
 )
 
 
+class FBUser(BASE):
+    __tablename__ = 'fbusers'
+    id = Column(String, nullable=False, primary_key=True)
+    name = Column(String, nullable=False)
+    profile_url = Column(String, nullable=False)
+    access_token = Column(String, nullable=False)
+
+
 class Restaurant(BASE):
     __tablename__ = 'restaurants'
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -24,6 +32,7 @@ class Restaurant(BASE):
     website = Column(String, nullable=True)
     phone_number = Column(String, nullable=True)
     cuisine_type = Column(String, nullable=True)
+    submitter_id = ForeignKey("restaurants.id", nullable=False)
 
 
 class MenuSection(BASE):
@@ -35,6 +44,7 @@ class MenuSection(BASE):
         primary_key=True,
         autoincrement=False)
     name = Column(String, nullable=False, primary_key=True)
+    submitter_id = ForeignKey("restaurants.id", nullable=False)
 
 
 class MenuItem(BASE):
@@ -49,6 +59,7 @@ class MenuItem(BASE):
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     price = Column(Float, nullable=True)
+    submitter_id = ForeignKey("restaurants.id", nullable=False)
 
 
 class MenuSectionAssignment(BASE):
@@ -63,6 +74,7 @@ class MenuSectionAssignment(BASE):
                           [section_name, restaurant_id],
                           [MenuSection.name, MenuSection.restaurant_id],
                           ondelete='CASCADE'))
+    submitter_id = ForeignKey("restaurants.id", nullable=False)
 
 
 class ItemImage(BASE):
@@ -73,11 +85,4 @@ class ItemImage(BASE):
     __table_args__ = (ForeignKeyConstraint(
         (menu_item_id, restaurant_id), (MenuItem.id, MenuItem.restaurant_id),
         ondelete='CASCADE'), )
-
-
-class FBUser(BASE):
-    __tablename__ = 'fbusers'
-    id = Column(String, nullable=False, primary_key=True)
-    name = Column(String, nullable=False)
-    profile_url = Column(String, nullable=False)
-    access_token = Column(String, nullable=False)
+    submitter_id = ForeignKey("restaurants.id", nullable=False)
