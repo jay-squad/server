@@ -130,9 +130,7 @@ def get_current_user():
         response = requests.get("{0}/me".format(fb_base_url), {
             "access_token": user_access_token,
         })
-        print(user_access_token)
         if response.ok:
-            print(response.text)
             profile = response.json()
 
     # If there is no result, we assume the user is not logged in.
