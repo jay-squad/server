@@ -1,7 +1,7 @@
 import os
 from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import sessionmaker
-from src.foodie.database.schema import Restaurant, MenuSection, MenuItem, MenuSectionAssignment, ItemImage
+from src.foodie.database.schema import Restaurant, MenuSection, MenuItem, MenuSectionAssignment, ItemImage, FBUser
 
 import src.foodie.settings.settings  # pylint: disable=unused-import
 
@@ -114,3 +114,7 @@ def get_restaurant_menu_items(restaurant_id):
     return [(menu_section, get_menu_section(restaurant_id, menu_section.name))
             for menu_section in menu_sections
             ] + [(None, get_sectionless_items(restaurant_id))]
+
+
+def find_user_by_email(email):
+    return SESSION_FACTORY.query(User).filter(User.email == email).all()

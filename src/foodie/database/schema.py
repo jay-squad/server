@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, ForeignKeyConstraint
+import datetime
+
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, ForeignKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
 
 BASE = declarative_base()
@@ -63,3 +65,19 @@ class ItemImage(BASE):
     __table_args__ = (ForeignKeyConstraint(
         (menu_item_id, restaurant_id), (MenuItem.id, MenuItem.restaurant_id),
         ondelete='CASCADE'), )
+
+
+class FBUser(BASE):
+    __tablename__ = 'fbusers'
+    id = Column(String, nullable=False, primary_key=True)
+    created = Column(
+        DateTime, default=datetime.datetime.utcnow, nullable=False)
+    updated = Column(
+        DateTime,
+        default=datetime.datetime.utcnow,
+        nullable=False,
+        onupdate=datetime.datetime.utcnow,
+    )
+    name = Column(String, nullable=False)
+    profile_url = Column(String, nullable=False)
+    access_token = Column(String, nullable=False)
