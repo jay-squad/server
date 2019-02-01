@@ -17,5 +17,6 @@ python-dotenv==0.8.2
 PyYAML==3.12
 six==1.11.0
 SQLAlchemy==1.2.8
+requests==2.21.0
 toml==0.9.4
 Werkzeug==0.14.1
