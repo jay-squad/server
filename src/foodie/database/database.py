@@ -5,8 +5,8 @@ from src.foodie.database.schema import Restaurant, MenuSection, MenuItem, MenuSe
 
 import src.foodie.settings.settings  # pylint: disable=unused-import
 
-SESSION_FACTORY = sessionmaker(
-    bind=create_engine(os.environ['DATABASE_URL']), autocommit=True)()
+ENGINE = create_engine(os.environ['DATABASE_URL'])
+SESSION_FACTORY = sessionmaker(bind=ENGINE, autocommit=True)()
 
 
 def _add_and_commit(model):
@@ -40,6 +40,7 @@ def insert_item_image(**kargs):
 def insert_new_item(restaurant_id,
                     item_name,
                     item_image,
+                    submitter_id,
                     description=None,
                     price=None,
                     section_name=None):
@@ -47,6 +48,7 @@ def insert_new_item(restaurant_id,
         menu_item = MenuItem(
             restaurant_id=restaurant_id,
             name=item_name,
+            submitter_id=submitter_id,
             price=price,
             description=description)
         SESSION_FACTORY.add(menu_item)
@@ -54,12 +56,14 @@ def insert_new_item(restaurant_id,
         SESSION_FACTORY.add(
             ItemImage(
                 restaurant_id=restaurant_id,
+                submitter_id=submitter_id,
                 menu_item_id=menu_item.id,
                 link=item_image))
         if section_name is not None:
             SESSION_FACTORY.add(
                 MenuSectionAssignment(
                     restaurant_id=restaurant_id,
+                    submitter_id=submitter_id,
                     menu_item_id=menu_item.id,
                     section_name=section_name))
     return menu_item

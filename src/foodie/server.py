@@ -17,36 +17,80 @@ FB_APP_ID = os.environ["FB_APP_ID"]
 FB_APP_SECRET = os.environ["FB_APP_SECRET"]
 
 
+class InvalidUsage(Exception):
+    status_code = 400
+
+    def __init__(self, message, status_code=None, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        return rv
+
+
+class UserNotAuthorized(InvalidUsage):
+    def __init__(self):
+        InvalidUsage.__init__(
+            self,
+            "User must be Facebook authenticated to perform this action",
+            status_code=403)
+
+
+@APP.errorhandler(InvalidUsage)
+def handle_invalid_usage(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
+
+
 @APP.route('/restaurant', methods=['POST'])
-def insert_restaurant():
+def upload_restaurant():
     '''new restaurant scheme'''
+    if not g.fb_user:
+        raise UserNotAuthorized()
+
     restaurant = database.insert_restaurant(
+        submitter_id=g.fb_user['id'],
         **request.form.to_dict())  # TODO request level form validation
     return jsonify(marshmallow_schema.RestaurantSchema().dump(restaurant).data)
 
 
 @APP.route('/restaurant/<restaurant_id>/section/<name>', methods=['POST'])
-def insert_restaurant_menu_section(restaurant_id, name):
+def upload_restaurant_menu_section(restaurant_id, name):
+    if not g.fb_user:
+        raise UserNotAuthorized()
     menu_section = database.insert_menu_section(
-        restaurant_id=restaurant_id, name=name)
+        submitter_id=g.fb_user['id'], restaurant_id=restaurant_id, name=name)
     return jsonify(
         marshmallow_schema.MenuSectionSchema().dump(menu_section).data)
 
 
 @APP.route('/restaurant/<restaurant_id>/item', methods=['POST'])
-def insert_menu_item(restaurant_id):
+def upload_menu_item(restaurant_id):
     '''insert a new menu item for a restaurant'''
+    if not g.fb_user:
+        raise UserNotAuthorized()
+
     menu_item = database.insert_new_item(
-        restaurant_id,
+        restaurant_id, submitter_id=g.fb_user['id'],
         **request.form.to_dict())  # TODO request level form validation
     return jsonify(marshmallow_schema.MenuItemSchema().dump(menu_item).data)
 
 
 @APP.route('/restaurant/<restaurant_id>/item/<menu_item_id>', methods=['PUT'])
 def upload_menu_item_images(restaurant_id, menu_item_id):
+    if not g.fb_user:
+        raise UserNotAuthorized()
+
     if 'item_image' in request.form:
         for image in request.form.getlist('item_image'):
             database.insert_item_image(
+                submitter_id=g.fb_user['id'],
                 restaurant_id=restaurant_id,
                 menu_item_id=menu_item_id,
                 link=image)
@@ -111,6 +155,16 @@ def get_current_user():
     # Set the user in the session dictionary as a global g.user and bail out
     # of this function early.
     fb_base_url = "https://graph.facebook.com"
+    if os.environ.get("TEST_RUN") == "True":
+        session["fb_user"] = dict(
+            name="test user",
+            profile_url=None,
+            id=0,
+            access_token="",
+        )
+        g.fb_user = session["fb_user"]
+        return
+
     if not hasattr(g, "access_token"):
         g.access_token = requests.get(
             "{0}/oauth/access_token".format(fb_base_url), {
