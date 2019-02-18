@@ -13,14 +13,28 @@ class NormalizedString(fields.String):
         return obj.__getattribute__(self._attribute).title()
 
 
+class SmartNested(fields.Nested):
+    def serialize(self, attr, obj, accessor=None):
+        return super(SmartNested, self).serialize(attr, obj, accessor)
+
+
+class FBUserSchema(ModelSchema):
+    class Meta:
+        model = FBUser
+
+
 class RestaurantSchema(ModelSchema):
     normalized_name = NormalizedString('name')
+    submitter = SmartNested(FBUserSchema)
 
     class Meta:
         model = Restaurant
 
 
 class MenuSectionSchema(ModelSchema):
+    normalized_name = NormalizedString('name')
+    submitter = SmartNested(FBUserSchema)
+
     class Meta:
         include_fk = True
         model = MenuSection
@@ -28,6 +42,7 @@ class MenuSectionSchema(ModelSchema):
 
 class MenuItemSchema(ModelSchema):
     normalized_name = NormalizedString('name')
+    submitter = SmartNested(FBUserSchema)
 
     class Meta:
         include_fk = True
@@ -35,6 +50,8 @@ class MenuItemSchema(ModelSchema):
 
 
 class ItemImageSchema(ModelSchema):
+    submitter = SmartNested(FBUserSchema)
+
     class Meta:
         include_fk = True
         model = ItemImage

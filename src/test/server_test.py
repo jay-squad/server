@@ -2,16 +2,16 @@ import json
 import pytest
 
 from src.foodie.server import APP
+from src.foodie.database import database
+from src.foodie.database.schema import BASE
 
 
 @pytest.fixture
 def client(request):
     test_client = APP.test_client()
+    BASE.metadata.drop_all(database.ENGINE)
+    BASE.metadata.create_all(database.ENGINE)
 
-    def teardown():
-        pass
-
-    request.addfinalizer(teardown)
     return test_client
 
 
@@ -25,7 +25,7 @@ def json_of_response(response):
     return json.loads(response.data.decode('utf8'))
 
 
-def test_json(client):
+def test_restaurant_insert_json(client):
     response = post_json(
         client, '/restaurant', {
             "cuisine_type": "Sushi",
@@ -37,4 +37,19 @@ def test_json(client):
             "website": None
         })
     assert response.status_code == 200
-    print(response)
+
+    response = post_json(client, '/restaurant/1/section/Main', {})
+
+    assert response.status_code == 200
+
+    response = post_json(
+        client, '/restaurant/1/item', {
+            "item_name":
+            "Pork Bone Soup",
+            "item_image":
+            "https://mykoreankitchen.com/wp-content/uploads/2007/01/2.-Pork-Neck-Bone-Soup-Gamjatang.jpg",
+            "section_name":
+            "Main"
+        })
+
+    assert response.status_code == 200

@@ -2,7 +2,8 @@ import datetime
 
 from flask import g
 from sqlalchemy import Column, Boolean, Integer, String, Float, DateTime, ForeignKey, ForeignKeyConstraint
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy.orm import relationship
 
 BASE = declarative_base()
 
@@ -27,8 +28,15 @@ class FBUser(Record, BASE):
 
 
 class UserSubmitted:
-    submitter_id = ForeignKey("restaurants.id", nullable=False)
     is_approved = Column(Boolean, default=False, nullable=False)
+
+    @declared_attr
+    def submitter_id(cls):
+        return Column(String, ForeignKey("fbusers.id"), nullable=True)
+
+    @declared_attr
+    def submitter(cls):
+        return relationship('FBUser', lazy='joined')
 
 
 class Restaurant(UserSubmitted, Record, BASE):

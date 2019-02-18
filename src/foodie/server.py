@@ -154,38 +154,38 @@ def get_current_user():
 
     # Set the user in the session dictionary as a global g.user and bail out
     # of this function early.
+    if session.get("fb_user"):
+        g.fb_user = session.get("fb_user")
+        return
+
     fb_base_url = "https://graph.facebook.com"
+    profile = None
+
     if os.environ.get("TEST_RUN") == "True":
-        session["fb_user"] = dict(
+        print("testrun")
+        user_access_token = ""
+        profile = dict(
             name="test user",
             profile_url=None,
-            id=0,
-            access_token="",
+            id="1",
         )
-        g.fb_user = session["fb_user"]
-        return
+    else:
+        if not hasattr(g, "access_token"):
+            g.access_token = requests.get(
+                "{0}/oauth/access_token".format(fb_base_url), {
+                    "client_id": FB_APP_ID,
+                    "client_secret": FB_APP_SECRET,
+                    "grant_type": "client_credentials",
+                }).json()["access_token"]
 
-    if not hasattr(g, "access_token"):
-        g.access_token = requests.get(
-            "{0}/oauth/access_token".format(fb_base_url), {
-                "client_id": FB_APP_ID,
-                "client_secret": FB_APP_SECRET,
-                "grant_type": "client_credentials",
-            }).json()["access_token"]
-
-    if session.get("fb_user"):
-        g.fb_user = session.get("user")
-        return
-
-    # Attempt to get the short term access token for the current fb_user.
-    profile = None
-    if "fb_access_token" in request.cookies:
-        user_access_token = request.cookies["fb_access_token"]
-        response = requests.get("{0}/me".format(fb_base_url), {
-            "access_token": user_access_token,
-        })
-        if response.ok:
-            profile = response.json()
+        # Attempt to get the short term access token for the current fb_user.
+        if "fb_access_token" in request.cookies:
+            user_access_token = request.cookies["fb_access_token"]
+            response = requests.get("{0}/me".format(fb_base_url), {
+                "access_token": user_access_token,
+            })
+            if response.ok:
+                profile = response.json()
 
     # If there is no result, we assume the user is not logged in.
     if profile:
@@ -219,7 +219,7 @@ def get_current_user():
             )
 
     # Commit changes to the database and set the user as a global g.user
-    g.fb_user = session.get("user", None)
+    g.fb_user = session.get("fb_user", None)
 
 
 APP.secret_key = os.environ['FLASK_SECRET_KEY']
