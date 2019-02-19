@@ -25,6 +25,10 @@ class FBUser(Record, BASE):
     name = Column(String, nullable=False)
     profile_url = Column(String, nullable=False)
     access_token = Column(String, nullable=False)
+    submitted_restaurants = relationship('Restaurant', lazy='joined')
+    submitted_menu_sections = relationship('MenuSection', lazy='joined')
+    submitted_items = relationship('MenuItem', lazy='joined')
+    submitted_item_images = relationship('ItemImage', lazy='joined')
 
 
 class UserSubmitted:

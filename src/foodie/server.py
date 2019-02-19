@@ -12,7 +12,6 @@ import src.foodie.settings.settings  # pylint: disable=unused-import
 
 APP = Flask(__name__)
 
-# TODO authentication
 FB_APP_ID = os.environ["FB_APP_ID"]
 FB_APP_SECRET = os.environ["FB_APP_SECRET"]
 
@@ -116,6 +115,12 @@ def get_restaurant_menu(restaurant_id):
                     for menu_section, item_list in menu_sections])
 
 
+@APP.route('/fbuser/<fbuser_id>', methods=['GET'])
+def get_fbuser(fbuser_id):
+    fbuser = database.get_fbuser_by_id(fbuser_id)
+    return jsonify(marshmallow_schema.FBUserSchema().dump(fbuser))
+
+
 @APP.route('/search/restaurant/<query>', methods=['GET'])
 def search_restaurant(query):
     return jsonify([{
@@ -162,7 +167,6 @@ def get_current_user():
     profile = None
 
     if os.environ.get("TEST_RUN") == "True":
-        print("testrun")
         user_access_token = ""
         profile = dict(
             name="test user",

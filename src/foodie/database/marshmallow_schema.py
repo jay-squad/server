@@ -13,19 +13,14 @@ class NormalizedString(fields.String):
         return obj.__getattribute__(self._attribute).title()
 
 
-class SmartNested(fields.Nested):
-    def serialize(self, attr, obj, accessor=None):
-        return super(SmartNested, self).serialize(attr, obj, accessor)
-
-
-class FBUserSchema(ModelSchema):
+class _FBUserSchema(ModelSchema):
     class Meta:
         model = FBUser
 
 
 class RestaurantSchema(ModelSchema):
     normalized_name = NormalizedString('name')
-    submitter = SmartNested(FBUserSchema)
+    submitter = fields.Nested(_FBUserSchema)
 
     class Meta:
         model = Restaurant
@@ -33,7 +28,7 @@ class RestaurantSchema(ModelSchema):
 
 class MenuSectionSchema(ModelSchema):
     normalized_name = NormalizedString('name')
-    submitter = SmartNested(FBUserSchema)
+    submitter = fields.Nested(_FBUserSchema)
 
     class Meta:
         include_fk = True
@@ -42,7 +37,7 @@ class MenuSectionSchema(ModelSchema):
 
 class MenuItemSchema(ModelSchema):
     normalized_name = NormalizedString('name')
-    submitter = SmartNested(FBUserSchema)
+    submitter = fields.Nested(_FBUserSchema)
 
     class Meta:
         include_fk = True
@@ -50,8 +45,19 @@ class MenuItemSchema(ModelSchema):
 
 
 class ItemImageSchema(ModelSchema):
-    submitter = SmartNested(FBUserSchema)
+    submitter = fields.Nested(_FBUserSchema)
 
     class Meta:
         include_fk = True
         model = ItemImage
+
+
+class FBUserSchema(_FBUserSchema):
+    submitted_restaurants = fields.Nested(
+        RestaurantSchema, many=True, exclude=('fbuser', 'submitter'))
+    submitted_menu_sections = fields.Nested(
+        MenuSectionSchema, many=True, exclude=('fbuser', 'submitter'))
+    submitted_items = fields.Nested(
+        MenuItemSchema, many=True, exclude=('fbuser', 'submitter'))
+    submitted_item_images = fields.Nested(
+        ItemImageSchema, many=True, exclude=('fbuser', 'submitter'))

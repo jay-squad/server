@@ -120,5 +120,9 @@ def get_restaurant_menu_items(restaurant_id):
             ] + [(None, get_sectionless_items(restaurant_id))]
 
 
+def get_fbuser_by_id(fbuser_id):
+    return SESSION_FACTORY.query(FBUser).filter(FBUser.id == fbuser_id).one()
+
+
 def find_user_by_email(email):
     return SESSION_FACTORY.query(User).filter(User.email == email).all()
