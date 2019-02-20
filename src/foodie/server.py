@@ -115,10 +115,20 @@ def get_restaurant_menu(restaurant_id):
                     for menu_section, item_list in menu_sections])
 
 
+@APP.route('/fbuser', methods=['GET'])
+def get_fb_user():
+    # TODO Jack: Admin auth to use this function
+    if not g.fb_user:
+        raise UserNotAuthorized()
+    fb_user = database.get_fb_user_by_id(g.fb_user['id'])
+    return jsonify(marshmallow_schema.FBUserSchema().dump(fb_user))
+
+
 @APP.route('/fbuser/<fbuser_id>', methods=['GET'])
-def get_fbuser(fbuser_id):
-    fbuser = database.get_fbuser_by_id(fbuser_id)
-    return jsonify(marshmallow_schema.FBUserSchema().dump(fbuser))
+def get_fb_user_by_id(fbuser_id):
+    # TODO Jack: Admin auth to use this function
+    fb_user = database.get_fb_user_by_id(fbuser_id)
+    return jsonify(marshmallow_schema.FBUserSchema().dump(fb_user))
 
 
 @APP.route('/search/restaurant/<query>', methods=['GET'])
@@ -167,9 +177,9 @@ def get_current_user():
     profile = None
 
     if os.environ.get("TEST_RUN") == "True":
-        user_access_token = ""
+        user_access_token = "TEST TOKEN"
         profile = dict(
-            name="test user",
+            name="Test User",
             profile_url=None,
             id="1",
         )
@@ -196,7 +206,7 @@ def get_current_user():
         # Check to see if this fb_user is already in our database.
         with database.SESSION_FACTORY.begin():
             fb_user = database.SESSION_FACTORY.query(FBUser).filter(
-                FBUser.id == profile["id"]).first()
+                FBUser.id == profile["id"]).one_or_none()
 
             if not fb_user:
                 # Not an existing fb_user so get info
