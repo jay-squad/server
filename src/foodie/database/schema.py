@@ -1,30 +1,37 @@
 import datetime
 
 from flask import g
-from sqlalchemy import Column, Boolean, Integer, String, Float, DateTime, ForeignKey, ForeignKeyConstraint
+from src.foodie.database.db import db
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import relationship
+import enum
 
 BASE = declarative_base()
 
 
 class Record:
-    created_at = Column(
-        DateTime, default=datetime.datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime,
+    created_at = db.Column(
+        db.DateTime, default=datetime.datetime.utcnow, nullable=False)
+    updated_at = db.Column(
+        db.DateTime,
         default=datetime.datetime.utcnow,
         nullable=False,
         onupdate=datetime.datetime.utcnow,
     )
 
 
+class ApprovalStatus(enum.Enum):
+    pending = 0
+    approved = 1
+    rejected = 2
+
+
 class FBUser(Record, BASE):
     __tablename__ = 'fbusers'
-    id = Column(String, nullable=False, primary_key=True)
-    name = Column(String, nullable=False)
-    profile_url = Column(String, nullable=False)
-    access_token = Column(String, nullable=False)
+    id = db.Column(db.String, nullable=False, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    profile_url = db.Column(db.String, nullable=False)
+    access_token = db.Column(db.String, nullable=False)
     submitted_restaurants = relationship('Restaurant', lazy='joined')
     submitted_menu_sections = relationship('MenuSection', lazy='joined')
     submitted_items = relationship('MenuItem', lazy='joined')
@@ -32,11 +39,14 @@ class FBUser(Record, BASE):
 
 
 class UserSubmitted:
-    is_approved = Column(Boolean, default=False, nullable=False)
+    approval_status = db.Column(
+        db.Enum(ApprovalStatus),
+        default=ApprovalStatus.pending,
+        nullable=False)
 
     @declared_attr
     def submitter_id(cls):
-        return Column(String, ForeignKey("fbusers.id"), nullable=True)
+        return db.Column(db.String, db.ForeignKey("fbusers.id"), nullable=True)
 
     @declared_attr
     def submitter(cls):
@@ -45,50 +55,50 @@ class UserSubmitted:
 
 class Restaurant(UserSubmitted, Record, BASE):
     __tablename__ = 'restaurants'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
-    longitude = Column(Float, nullable=False)
-    latitude = Column(Float, nullable=False)
-    description = Column(String, nullable=True)
-    website = Column(String, nullable=True)
-    phone_number = Column(String, nullable=True)
-    cuisine_type = Column(String, nullable=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    description = db.Column(db.String, nullable=True)
+    website = db.Column(db.String, nullable=True)
+    phone_number = db.Column(db.String, nullable=True)
+    cuisine_type = db.Column(db.String, nullable=True)
 
 
 class MenuSection(UserSubmitted, Record, BASE):
     __tablename__ = 'menusections'
-    restaurant_id = Column(
-        Integer,
-        ForeignKey("restaurants.id", ondelete='CASCADE'),
+    restaurant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("restaurants.id", ondelete='CASCADE'),
         nullable=False,
         primary_key=True,
         autoincrement=False)
-    name = Column(String, nullable=False, primary_key=True)
+    name = db.Column(db.String, nullable=False, primary_key=True)
 
 
 class MenuItem(UserSubmitted, Record, BASE):
     __tablename__ = 'menuitems'
-    restaurant_id = Column(
-        Integer,
-        ForeignKey("restaurants.id", ondelete='CASCADE'),
+    restaurant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("restaurants.id", ondelete='CASCADE'),
         nullable=False,
         primary_key=True,
         autoincrement=False)
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    price = Column(Float, nullable=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String, nullable=False)
+    description = db.Column(db.String, nullable=True)
+    price = db.Column(db.Float, nullable=True)
 
 
 class MenuSectionAssignment(UserSubmitted, Record, BASE):
     __tablename__ = 'menusectionassignemnts'
-    restaurant_id = Column(Integer, primary_key=True, nullable=False)
-    section_name = Column(String, primary_key=True, nullable=False)
-    menu_item_id = Column(Integer, primary_key=True, nullable=False)
-    __table_args__ = (ForeignKeyConstraint(
+    restaurant_id = db.Column(db.Integer, primary_key=True, nullable=False)
+    section_name = db.Column(db.String, primary_key=True, nullable=False)
+    menu_item_id = db.Column(db.Integer, primary_key=True, nullable=False)
+    __table_args__ = (db.ForeignKeyConstraint(
         [menu_item_id, restaurant_id], [MenuItem.id, MenuItem.restaurant_id],
         ondelete='CASCADE'),
-                      ForeignKeyConstraint(
+                      db.ForeignKeyConstraint(
                           [section_name, restaurant_id],
                           [MenuSection.name, MenuSection.restaurant_id],
                           ondelete='CASCADE'))
@@ -96,9 +106,9 @@ class MenuSectionAssignment(UserSubmitted, Record, BASE):
 
 class ItemImage(UserSubmitted, Record, BASE):
     __tablename__ = 'itemimages'
-    link = Column(String, primary_key=True, nullable=False)
-    menu_item_id = Column(Integer, primary_key=True, nullable=False)
-    restaurant_id = Column(Integer, primary_key=True, nullable=False)
-    __table_args__ = (ForeignKeyConstraint(
+    link = db.Column(db.String, primary_key=True, nullable=False)
+    menu_item_id = db.Column(db.Integer, primary_key=True, nullable=False)
+    restaurant_id = db.Column(db.Integer, primary_key=True, nullable=False)
+    __table_args__ = (db.ForeignKeyConstraint(
         (menu_item_id, restaurant_id), (MenuItem.id, MenuItem.restaurant_id),
         ondelete='CASCADE'), )

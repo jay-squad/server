@@ -2,6 +2,7 @@
 from src.foodie.database.schema import *
 from marshmallow_sqlalchemy import ModelSchema
 from marshmallow import fields
+from marshmallow_enum import EnumField
 
 
 class NormalizedString(fields.String):
@@ -21,6 +22,7 @@ class _FBUserSchema(ModelSchema):
 class RestaurantSchema(ModelSchema):
     normalized_name = NormalizedString('name')
     submitter = fields.Nested(_FBUserSchema)
+    approval_status = EnumField(ApprovalStatus)
 
     class Meta:
         model = Restaurant
@@ -29,6 +31,7 @@ class RestaurantSchema(ModelSchema):
 class MenuSectionSchema(ModelSchema):
     normalized_name = NormalizedString('name')
     submitter = fields.Nested(_FBUserSchema)
+    approval_status = EnumField(ApprovalStatus)
 
     class Meta:
         include_fk = True
@@ -38,6 +41,7 @@ class MenuSectionSchema(ModelSchema):
 class MenuItemSchema(ModelSchema):
     normalized_name = NormalizedString('name')
     submitter = fields.Nested(_FBUserSchema)
+    approval_status = EnumField(ApprovalStatus)
 
     class Meta:
         include_fk = True
@@ -46,6 +50,7 @@ class MenuItemSchema(ModelSchema):
 
 class ItemImageSchema(ModelSchema):
     submitter = fields.Nested(_FBUserSchema)
+    approval_status = EnumField(ApprovalStatus)
 
     class Meta:
         include_fk = True

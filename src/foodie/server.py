@@ -7,10 +7,10 @@ from src.foodie.database import database
 from src.foodie.database import marshmallow_schema
 from src.foodie.database.schema import FBUser
 from src.foodie.search import search
+from src.foodie.app import APP
+from src.foodie.database.db import db
 
 import src.foodie.settings.settings  # pylint: disable=unused-import
-
-APP = Flask(__name__)
 
 FB_APP_ID = os.environ["FB_APP_ID"]
 FB_APP_SECRET = os.environ["FB_APP_SECRET"]
@@ -117,7 +117,6 @@ def get_restaurant_menu(restaurant_id):
 
 @APP.route('/fbuser', methods=['GET'])
 def get_fb_user():
-    # TODO Jack: Admin auth to use this function
     if not g.fb_user:
         raise UserNotAuthorized()
     fb_user = database.get_fb_user_by_id(g.fb_user['id'])
@@ -204,33 +203,32 @@ def get_current_user():
     # If there is no result, we assume the user is not logged in.
     if profile:
         # Check to see if this fb_user is already in our database.
-        with database.SESSION_FACTORY.begin():
-            fb_user = database.SESSION_FACTORY.query(FBUser).filter(
-                FBUser.id == profile["id"]).one_or_none()
+        fb_user = db.session.query(FBUser).filter(
+            FBUser.id == profile["id"]).one_or_none()
 
-            if not fb_user:
-                # Not an existing fb_user so get info
-                if "link" not in profile:
-                    profile["link"] = ""
+        if not fb_user:
+            # Not an existing fb_user so get info
+            if "link" not in profile:
+                profile["link"] = ""
 
-                # Create the fb_user and insert it into the database
-                fb_user = FBUser(
-                    id=str(profile["id"]),
-                    name=profile["name"],
-                    profile_url=profile["link"],
-                    access_token=user_access_token)
-                database.SESSION_FACTORY.add(fb_user)
-            elif fb_user.access_token != user_access_token:
-                # If an existing fb_user, update the access token
-                fb_user.access_token = user_access_token
+            # Create the fb_user and insert it into the database
+            fb_user = FBUser(
+                id=str(profile["id"]),
+                name=profile["name"],
+                profile_url=profile["link"],
+                access_token=user_access_token)
+            db.session.add(fb_user)
+        elif fb_user.access_token != user_access_token:
+            # If an existing fb_user, update the access token
+            fb_user.access_token = user_access_token
 
-            # Add the fb_user to the current session
-            session["fb_user"] = dict(
-                name=fb_user.name,
-                profile_url=fb_user.profile_url,
-                id=fb_user.id,
-                access_token=fb_user.access_token,
-            )
+        # Add the fb_user to the current session
+        session["fb_user"] = dict(
+            name=fb_user.name,
+            profile_url=fb_user.profile_url,
+            id=fb_user.id,
+            access_token=fb_user.access_token,
+        )
 
     # Commit changes to the database and set the user as a global g.user
     g.fb_user = session.get("fb_user", None)
