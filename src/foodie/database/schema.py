@@ -44,6 +44,9 @@ class UserSubmitted:
         default=ApprovalStatus.pending,
         nullable=False)
 
+    request_uuid = db.Column(
+        db.String, default=(lambda _: g.request_uuid), nullable=False)
+
     @declared_attr
     def submitter_id(cls):
         return db.Column(db.String, db.ForeignKey("fbusers.id"), nullable=True)

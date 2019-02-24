@@ -1,6 +1,7 @@
 '''Simple starter flask app'''
 import os
 import requests
+import uuid
 
 from flask import Flask, request, jsonify, session, g
 from src.foodie.database import database
@@ -9,6 +10,7 @@ from src.foodie.database.schema import FBUser
 from src.foodie.search import search
 from src.foodie.app import APP
 from src.foodie.database.db import db
+from itertools import groupby
 
 import src.foodie.settings.settings  # pylint: disable=unused-import
 
@@ -115,19 +117,42 @@ def get_restaurant_menu(restaurant_id):
                     for menu_section, item_list in menu_sections])
 
 
+def group_submissions_by_request_uuid(fb_user):
+    fb_user_ = fb_user.data
+    submission_types = [
+        'submitted_restaurants', 'submitted_menu_sections', 'submitted_items',
+        'submitted_item_images'
+    ]
+    submissions = [
+        i for j in [[(type_, k) for k in fb_user_[type_]]
+                    for type_ in submission_types] for i in j
+    ]
+    grouped_submissions = [
+        list(g) for k, g in groupby(
+            sorted(submissions, key=lambda x: x[1]['request_uuid']),
+            lambda x: x[1]['request_uuid'])
+    ]
+    fb_user_['submissions'] = grouped_submissions
+
+
+def get_fb_user_information(fb_user_id):
+    fb_user = database.get_fb_user_by_id(fb_user_id)
+    fb_user = marshmallow_schema.FBUserSchema().dump(fb_user)
+    group_submissions_by_request_uuid(fb_user)
+    return jsonify(fb_user)
+
+
 @APP.route('/fbuser', methods=['GET'])
 def get_fb_user():
     if not g.fb_user:
         raise UserNotAuthorized()
-    fb_user = database.get_fb_user_by_id(g.fb_user['id'])
-    return jsonify(marshmallow_schema.FBUserSchema().dump(fb_user))
+    return get_fb_user_information(g.fb_user['id'])
 
 
-@APP.route('/fbuser/<fbuser_id>', methods=['GET'])
-def get_fb_user_by_id(fbuser_id):
+@APP.route('/fbuser/<fb_user_id>', methods=['GET'])
+def get_fb_user_by_id(fb_user_id):
     # TODO Jack: Admin auth to use this function
-    fb_user = database.get_fb_user_by_id(fbuser_id)
-    return jsonify(marshmallow_schema.FBUserSchema().dump(fb_user))
+    return get_fb_user_information(fb_user_id)
 
 
 @APP.route('/search/restaurant/<query>', methods=['GET'])
@@ -153,6 +178,11 @@ def search_menu_item(query):
         "image":
         marshmallow_schema.ItemImageSchema().dump(image).data
     } for item, image in search.find_menu_item(query)])
+
+
+@APP.before_request
+def generate_request_uuid():
+    g.request_uuid = uuid.uuid4()
 
 
 @APP.before_request
