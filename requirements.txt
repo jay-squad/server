@@ -3,7 +3,7 @@ cached-property==1.4.2
 cfgv==1.1.0
 click==6.7
 Flask==1.0.2
-flask-sqlalchemy-2.3.2
+flask-sqlalchemy==2.3.2
 gunicorn==19.9.0
 identify==1.0.18
 itsdangerous==0.24
