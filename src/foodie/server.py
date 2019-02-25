@@ -6,7 +6,7 @@ import uuid
 from flask import Flask, request, jsonify, session, g
 from src.foodie.database import database
 from src.foodie.database import marshmallow_schema
-from src.foodie.database.schema import FBUser
+from src.foodie.database.schema import *
 from src.foodie.search import search
 from src.foodie.app import APP
 from src.foodie.database.db import db
@@ -34,12 +34,32 @@ class InvalidUsage(Exception):
         return rv
 
 
-class UserNotAuthorized(InvalidUsage):
+class UserNotFacebookAuthed(InvalidUsage):
     def __init__(self):
         InvalidUsage.__init__(
             self,
             "User must be Facebook authenticated to perform this action",
             status_code=403)
+
+
+class UserNotAdmin(InvalidUsage):
+    def __init__(self):
+        InvalidUsage.__init__(
+            self,
+            "User must be an Admin to perform this action",
+            status_code=403)
+
+
+def ensure_proper_submitter_for_delete(submitter_id):
+    if g.is_admin:
+        return
+
+    if not g.fb_user:
+        raise UserNotFacebookAuthed()
+
+    if g.fb_user['id'] != submitter_id:
+        raise InvalidUsage(
+            "User may not edit other user's submissions!", status_code=403)
 
 
 @APP.errorhandler(InvalidUsage)
@@ -53,7 +73,7 @@ def handle_invalid_usage(error):
 def upload_restaurant():
     '''new restaurant scheme'''
     if not g.fb_user:
-        raise UserNotAuthorized()
+        raise UserNotFacebookAuthed()
 
     restaurant = database.insert_restaurant(
         submitter_id=g.fb_user['id'],
@@ -61,41 +81,14 @@ def upload_restaurant():
     return jsonify(marshmallow_schema.RestaurantSchema().dump(restaurant).data)
 
 
-@APP.route('/restaurant/<restaurant_id>/section/<name>', methods=['POST'])
-def upload_restaurant_menu_section(restaurant_id, name):
-    if not g.fb_user:
-        raise UserNotAuthorized()
-    menu_section = database.insert_menu_section(
-        submitter_id=g.fb_user['id'], restaurant_id=restaurant_id, name=name)
-    return jsonify(
-        marshmallow_schema.MenuSectionSchema().dump(menu_section).data)
-
-
-@APP.route('/restaurant/<restaurant_id>/item', methods=['POST'])
-def upload_menu_item(restaurant_id):
-    '''insert a new menu item for a restaurant'''
-    if not g.fb_user:
-        raise UserNotAuthorized()
-
-    menu_item = database.insert_new_item(
-        restaurant_id, submitter_id=g.fb_user['id'],
-        **request.form.to_dict())  # TODO request level form validation
-    return jsonify(marshmallow_schema.MenuItemSchema().dump(menu_item).data)
-
-
-@APP.route('/restaurant/<restaurant_id>/item/<menu_item_id>', methods=['PUT'])
-def upload_menu_item_images(restaurant_id, menu_item_id):
-    if not g.fb_user:
-        raise UserNotAuthorized()
-
-    if 'item_image' in request.form:
-        for image in request.form.getlist('item_image'):
-            database.insert_item_image(
-                submitter_id=g.fb_user['id'],
-                restaurant_id=restaurant_id,
-                menu_item_id=menu_item_id,
-                link=image)
-    return database.get_menu_item_by_id(restaurant_id, menu_item_id)
+@APP.route('/restaurant/<restaurant_id>', methods=['DELETE'])
+def delete_restaurant(restaurant_id):
+    if not g.is_admin:
+        raise UserNotAdmin()
+    restaurant = database.get_restaurant_by_id(restaurant_id)
+    db.session.delete(restaurant)
+    db.session.commit()
+    return jsonify(success=True)
 
 
 @APP.route('/restaurant/<restaurant_id>', methods=['GET'])
@@ -115,6 +108,83 @@ def get_restaurant_menu(restaurant_id):
         marshmallow_schema.ItemImageSchema().dump(image).data,
     } for item, image in item_list])
                     for menu_section, item_list in menu_sections])
+
+
+@APP.route('/restaurant/<restaurant_id>/section/<name>', methods=['POST'])
+def upload_restaurant_menu_section(restaurant_id, name):
+    if not g.fb_user:
+        raise UserNotFacebookAuthed()
+    menu_section = database.insert_menu_section(
+        submitter_id=g.fb_user['id'], restaurant_id=restaurant_id, name=name)
+    return jsonify(
+        marshmallow_schema.MenuSectionSchema().dump(menu_section).data)
+
+
+@APP.route('/restaurant/<restaurant_id>/section/<name>', methods=['DELETE'])
+def delete_restaurant_menu_section(restaurant_id, name):
+    if not g.is_admin:
+        raise UserNotAdmin()
+    menu_section = db.session.query(MenuSection).get_or_404((restaurant_id,
+                                                             name))
+    db.session.delete(menu_section)
+    db.session.commit()
+    return jsonify(success=True)
+
+
+@APP.route('/restaurant/<restaurant_id>/item', methods=['POST'])
+def upload_menu_item(restaurant_id):
+    '''insert a new menu item for a restaurant'''
+    if not g.fb_user:
+        raise UserNotFacebookAuthed()
+
+    menu_item = database.insert_new_item(
+        restaurant_id, submitter_id=g.fb_user['id'],
+        **request.form.to_dict())  # TODO request level form validation
+    return jsonify(marshmallow_schema.MenuItemSchema().dump(menu_item).data)
+
+
+@APP.route(
+    '/restaurant/<restaurant_id>/item/<menu_item_id>', methods=['DELETE'])
+def delete_restaurant_menu_item(restaurant_id, menu_item_id):
+    if not g.is_admin:
+        raise UserNotAdmin()
+
+    menu_item = db.session.query(MenuItem).get_or_404((restaurant_id,
+                                                       menu_item_id))
+    db.session.delete(menu_item)
+    db.session.commit()
+    return jsonify(success=True)
+
+
+@APP.route('/restaurant/<restaurant_id>/item/<menu_item_id>', methods=['PUT'])
+def upload_menu_item_images(restaurant_id, menu_item_id):
+    if not g.fb_user:
+        raise UserNotFacebookAuthed()
+
+    if 'item_image' in request.form:
+        for image in request.form.getlist('item_image'):
+            database.insert_item_image(
+                submitter_id=g.fb_user['id'],
+                restaurant_id=restaurant_id,
+                menu_item_id=menu_item_id,
+                link=image)
+    # TODO JACK: this probably doesn't work since it hasn't been tested
+    return database.get_menu_item_by_id(restaurant_id, menu_item_id)
+
+
+@APP.route(
+    '/restaurant/<restaurant_id>/item/<menu_item_id>/image',
+    methods=['DELETE'])
+def delete_menu_item_image(restaurant_id, menu_item_id):
+    if not 'item_image' in request.form:
+        raise InvalidUsage("Item image not provided!", status_code=400)
+    link = request.form['item_image']
+    item_image = db.session.query(ItemImage).get_or_404((link, restaurant_id,
+                                                         menu_item_id))
+    ensure_proper_submitter_for_delete(item_image.submitter_id)
+    db.session.delete(item_image)
+    db.session.commit()
+    return jsonify(success=True)
 
 
 def group_submissions_by_request_uuid(fb_user):
@@ -145,13 +215,14 @@ def get_fb_user_information(fb_user_id):
 @APP.route('/fbuser', methods=['GET'])
 def get_fb_user():
     if not g.fb_user:
-        raise UserNotAuthorized()
+        raise UserNotFacebookAuthed()
     return get_fb_user_information(g.fb_user['id'])
 
 
 @APP.route('/fbuser/<fb_user_id>', methods=['GET'])
 def get_fb_user_by_id(fb_user_id):
-    # TODO Jack: Admin auth to use this function
+    if not g.is_admin:
+        raise UserNotAdmin()
     return get_fb_user_information(fb_user_id)
 
 
@@ -262,6 +333,14 @@ def get_current_user():
 
     # Commit changes to the database and set the user as a global g.user
     g.fb_user = session.get("fb_user", None)
+
+
+@APP.before_request
+def auth_admin():
+    if "admin_secret_key" in request.cookies and os.environ['ADMIN_SECRET_KEY'] == request.cookies["admin_secret_key"]:
+        g.is_admin = True
+    else:
+        g.is_admin = False
 
 
 APP.secret_key = os.environ['FLASK_SECRET_KEY']
