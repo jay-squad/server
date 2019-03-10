@@ -53,3 +53,15 @@ def test_restaurant_insert_json(client):
         })
 
     assert response.status_code == 200
+
+    response = post_json(
+        client, '/restaurant/1/item', {
+            "item_name":
+            "Pork Bone Soup",
+            "item_image":
+            "https://mykoreankitchen.com/wp-content/uploads/2007/01/1.-Gamjatang-Pork-Bone-Soup.jpg",
+            "section_name":
+            "Main"
+        })
+
+    assert response.status_code == 200

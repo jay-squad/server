@@ -21,7 +21,10 @@ class _FBUserSchema(ModelSchema):
 
 class RestaurantSchema(ModelSchema):
     normalized_name = NormalizedString('name')
-    submitter = fields.Nested(_FBUserSchema)
+    submitter = fields.Nested(
+        _FBUserSchema,
+        exclude=('submitted_item_images', 'submitted_items',
+                 'submitted_menu_sections', 'submitted_restaurants'))
     approval_status = EnumField(ApprovalStatus)
 
     class Meta:
@@ -30,7 +33,10 @@ class RestaurantSchema(ModelSchema):
 
 class MenuSectionSchema(ModelSchema):
     normalized_name = NormalizedString('name')
-    submitter = fields.Nested(_FBUserSchema)
+    submitter = fields.Nested(
+        _FBUserSchema,
+        exclude=('submitted_item_images', 'submitted_items',
+                 'submitted_menu_sections', 'submitted_restaurants'))
     approval_status = EnumField(ApprovalStatus)
 
     class Meta:
@@ -40,7 +46,11 @@ class MenuSectionSchema(ModelSchema):
 
 class MenuItemSchema(ModelSchema):
     normalized_name = NormalizedString('name')
-    submitter = fields.Nested(_FBUserSchema)
+    submitter = fields.Nested(
+        _FBUserSchema,
+        exclude=('submitted_item_images', 'submitted_items',
+                 'submitted_menu_sections', 'submitted_restaurants'))
+
     approval_status = EnumField(ApprovalStatus)
 
     class Meta:
@@ -49,7 +59,10 @@ class MenuItemSchema(ModelSchema):
 
 
 class ItemImageSchema(ModelSchema):
-    submitter = fields.Nested(_FBUserSchema)
+    submitter = fields.Nested(
+        _FBUserSchema,
+        exclude=('submitted_item_images', 'submitted_items',
+                 'submitted_menu_sections', 'submitted_restaurants'))
     approval_status = EnumField(ApprovalStatus)
 
     class Meta:

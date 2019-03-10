@@ -25,7 +25,6 @@ def insert_menu_section(**kargs):
 
 
 def insert_menu_item(**kargs):
-    assert "id" not in kargs
     return _add_and_commit(MenuItem(**kargs))
 
 
@@ -44,27 +43,33 @@ def insert_new_item(restaurant_id,
                     description=None,
                     price=None,
                     section_name=None):
-    menu_item = MenuItem(
-        restaurant_id=restaurant_id,
-        name=item_name,
-        submitter_id=submitter_id,
-        price=price,
-        description=description)
-    db.session.add(menu_item)
-    db.session.flush()
+    menu_item = db.session.query(MenuItem) \
+    .filter(MenuItem.restaurant_id == restaurant_id) \
+    .filter(MenuItem.name == item_name) \
+    .one_or_none()
+
+    if not menu_item:
+        menu_item = MenuItem(
+            restaurant_id=restaurant_id,
+            name=item_name,
+            submitter_id=submitter_id,
+            price=price,
+            description=description)
+        db.session.add(menu_item)
+        db.session.flush()
+        if section_name is not None:
+            db.session.add(
+                MenuSectionAssignment(
+                    restaurant_id=restaurant_id,
+                    submitter_id=submitter_id,
+                    menu_item_id=menu_item.id,
+                    section_name=section_name))
     db.session.add(
         ItemImage(
             restaurant_id=restaurant_id,
             submitter_id=submitter_id,
             menu_item_id=menu_item.id,
             link=item_image))
-    if section_name is not None:
-        db.session.add(
-            MenuSectionAssignment(
-                restaurant_id=restaurant_id,
-                submitter_id=submitter_id,
-                menu_item_id=menu_item.id,
-                section_name=section_name))
     db.session.commit()
     return menu_item
 

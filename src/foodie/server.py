@@ -97,17 +97,32 @@ def get_restaurant(restaurant_id):
         database.get_restaurant_by_id(restaurant_id)).data)
 
 
+def get_restaurant_menu_items(restaurant_id):
+    menu_sections = database.get_restaurant_menu_items(restaurant_id)
+    section_list = [(menu_section.name if menu_section is not None else '',
+                     [(marshmallow_schema.MenuItemSchema().dump(item).data,
+                       marshmallow_schema.ItemImageSchema().dump(image).data)
+                      for item, image in item_list])
+                    for menu_section, item_list in menu_sections]
+    grouped_sections = []
+    for menu_section, item_list in section_list:
+        grouped_items = {}
+        for item, item_image in item_list:
+            if item['name'] in grouped_items:
+                grouped_items[item['name']]['item_images'].append(item_image)
+            else:
+                grouped_items[item['name']] = {
+                    'item': item,
+                    'item_images': [item_image]
+                }
+        grouped_sections += grouped_items.values()
+    return grouped_sections
+
+
 @APP.route('/restaurant/<restaurant_id>/menu', methods=['GET'])
 def get_restaurant_menu(restaurant_id):
     '''get a specific restaurant item scheme'''
-    menu_sections = database.get_restaurant_menu_items(restaurant_id)
-    return jsonify([(menu_section.name if menu_section is not None else '', [{
-        "item":
-        marshmallow_schema.MenuItemSchema().dump(item).data,
-        "image":
-        marshmallow_schema.ItemImageSchema().dump(image).data,
-    } for item, image in item_list])
-                    for menu_section, item_list in menu_sections])
+    return jsonify(get_restaurant_menu_items(restaurant_id))
 
 
 @APP.route('/restaurant/<restaurant_id>/section/<name>', methods=['POST'])
@@ -203,6 +218,8 @@ def group_submissions_by_request_uuid(fb_user):
             lambda x: x[1]['request_uuid'])
     ]
     fb_user_['submissions'] = grouped_submissions
+    for submission_type in submission_types:
+        del fb_user_[submission_type]
 
 
 def get_fb_user_information(fb_user_id):
@@ -319,6 +336,7 @@ def get_current_user():
                 profile_url=profile["link"],
                 access_token=user_access_token)
             db.session.add(fb_user)
+            db.session.commit()
         elif fb_user.access_token != user_access_token:
             # If an existing fb_user, update the access token
             fb_user.access_token = user_access_token
