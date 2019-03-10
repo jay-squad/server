@@ -39,11 +39,6 @@ class FBUser(Record, BASE):
 
 
 class UserSubmitted:
-    approval_status = db.Column(
-        db.Enum(ApprovalStatus),
-        default=ApprovalStatus.pending,
-        nullable=False)
-
     request_uuid = db.Column(
         db.String, default=(lambda _: g.request_uuid), nullable=False)
 
@@ -112,6 +107,10 @@ class ItemImage(UserSubmitted, Record, BASE):
     link = db.Column(db.String, primary_key=True, nullable=False)
     menu_item_id = db.Column(db.Integer, primary_key=True, nullable=False)
     restaurant_id = db.Column(db.Integer, primary_key=True, nullable=False)
+    approval_status = db.Column(
+        db.Enum(ApprovalStatus),
+        default=ApprovalStatus.pending,
+        nullable=False)
     __table_args__ = (db.ForeignKeyConstraint(
         (menu_item_id, restaurant_id), (MenuItem.id, MenuItem.restaurant_id),
         ondelete='CASCADE'), )

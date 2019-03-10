@@ -29,6 +29,14 @@ def json_of_response(response):
     return json.loads(response.data.decode('utf8'))
 
 
+def test_restaurant_search(client):
+    response = get(client, '/search/restaurant/')
+    assert response.status_code == 200
+
+    response = get(client, '/search/restaurant/hi')
+    assert response.status_code == 200
+
+
 def test_restaurant_insert_json(client):
     response = post_json(
         client, '/restaurant', {
@@ -68,12 +76,4 @@ def test_restaurant_insert_json(client):
             "Main"
         })
 
-    assert response.status_code == 200
-
-
-def test_restaurant_search(client):
-    response = get(client, '/search/restaurant/')
-    assert response.status_code == 200
-
-    response = get(client, '/search/restaurant/hi')
     assert response.status_code == 200

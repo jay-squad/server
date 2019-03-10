@@ -72,6 +72,10 @@ def submitter_id_or_error():
         raise UserNotFacebookAuthed()
 
 
+def approved_or_admin(item_image):
+    return g.is_admin or item_image.approval_status == ApprovalStatus.approved
+
+
 @APP.errorhandler(InvalidUsage)
 def handle_invalid_usage(error):
     response = jsonify(error.to_dict())
@@ -122,7 +126,8 @@ def get_restaurant_menu_items(restaurant_id):
     section_list = [(menu_section.name if menu_section is not None else '',
                      [(marshmallow_schema.MenuItemSchema().dump(item).data,
                        marshmallow_schema.ItemImageSchema().dump(image).data)
-                      for item, image in item_list])
+                      for item, image in item_list
+                      if approved_or_admin(image)])
                     for menu_section, item_list in menu_sections]
     grouped_sections = []
     for menu_section, item_list in section_list:
@@ -282,7 +287,8 @@ def query_items(query):
     return [{
         "item": marshmallow_schema.MenuItemSchema().dump(item).data,
         "image": marshmallow_schema.ItemImageSchema().dump(image).data
-    } for item, image in search.find_menu_item(query)]
+    } for item, image in search.find_menu_item(query)
+            if approved_or_admin(image)]
 
 
 @APP.route('/search/item/', methods=['GET'])
