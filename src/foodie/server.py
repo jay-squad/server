@@ -243,14 +243,23 @@ def get_fb_user_by_id(fb_user_id):
     return get_fb_user_information(fb_user_id)
 
 
-@APP.route('/search/restaurant/<query>', methods=['GET'])
-def search_restaurant(query):
-    return jsonify([{
+def query_restaurants(query):
+    return [{
         "restaurant":
         marshmallow_schema.RestaurantSchema().dump(restaurant).data,
         "menu":
         get_restaurant_menu_items(restaurant.id)[:6]
-    } for restaurant in search.find_restaurant(query)])
+    } for restaurant in search.find_restaurant("")]
+
+
+@APP.route('/search/restaurant', methods=['GET'])
+def search_all_restaurant():
+    return jsonify(query_restaurants(""))
+
+
+@APP.route('/search/restaurant/<query>', methods=['GET'])
+def search_restaurant(query):
+    return jsonify(query_restaurants(query))
 
 
 @APP.route('/search/item/<query>', methods=['GET'])
