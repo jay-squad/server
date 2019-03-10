@@ -244,12 +244,14 @@ def get_fb_user_by_id(fb_user_id):
 
 
 def query_restaurants(query):
-    return [{
+    restaurants = [{
         "restaurant":
         marshmallow_schema.RestaurantSchema().dump(restaurant).data,
         "menu":
         get_restaurant_menu_items(restaurant.id)[:6]
     } for restaurant in search.find_restaurant("")]
+    # session.
+    return restaurants
 
 
 @APP.route('/search/restaurant/', methods=['GET'])
@@ -359,6 +361,7 @@ def get_current_user():
 
 @APP.before_request
 def auth_admin():
+    print(request.form)
     if "admin_secret_key" in request.cookies and os.environ['ADMIN_SECRET_KEY'] == request.cookies["admin_secret_key"]:
         g.is_admin = True
     elif "admin_secret_key" in request.form and os.environ['ADMIN_SECRET_KEY'] == request.form['admin_secret_key']:
