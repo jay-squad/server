@@ -361,6 +361,8 @@ def get_current_user():
 def auth_admin():
     if "admin_secret_key" in request.cookies and os.environ['ADMIN_SECRET_KEY'] == request.cookies["admin_secret_key"]:
         g.is_admin = True
+    elif "admin_secret_key" in request.form and os.environ['ADMIN_SECRET_KEY'] == request.form['admin_secret_key']:
+        g.is_admin = True
     else:
         g.is_admin = False
 
