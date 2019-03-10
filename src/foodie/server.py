@@ -248,13 +248,8 @@ def search_restaurant(query):
     return jsonify([{
         "restaurant":
         marshmallow_schema.RestaurantSchema().dump(restaurant).data,
-        "menu": [{
-            "item":
-            marshmallow_schema.MenuItemSchema().dump(item).data,
-            "image":
-            marshmallow_schema.ItemImageSchema().dump(image).data,
-        } for section in database.get_restaurant_menu_items(restaurant.id)
-                 for item, image in section[1]][:6]
+        "menu":
+        get_restaurant_menu_items(restaurant.id)[:6]
     } for restaurant in search.find_restaurant(query)])
 
 
