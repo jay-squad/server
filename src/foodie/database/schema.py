@@ -109,7 +109,9 @@ class ItemImage(UserSubmitted, Record, BASE):
     restaurant_id = db.Column(db.Integer, primary_key=True, nullable=False)
     approval_status = db.Column(
         db.Enum(ApprovalStatus),
-        default=ApprovalStatus.pending,
+        default=
+        (lambda _: ApprovalStatus.approved if g.is_admin else ApprovalStatus.pending
+         ),
         nullable=False)
     __table_args__ = (db.ForeignKeyConstraint(
         (menu_item_id, restaurant_id), (MenuItem.id, MenuItem.restaurant_id),

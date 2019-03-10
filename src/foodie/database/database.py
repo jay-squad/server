@@ -114,7 +114,7 @@ def get_sectionless_items(restaurant_id):
         .join(ItemImage)\
         .outerjoin(MenuSectionAssignment)\
         .filter(MenuItem.restaurant_id == restaurant_id)\
-        .filter(MenuSectionAssignment.section_name is None).all()
+        .filter(MenuSectionAssignment.section_name == None).all()
 
 
 def get_restaurant_menu_items(restaurant_id):
