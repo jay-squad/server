@@ -16,6 +16,7 @@ import src.foodie.settings.settings  # pylint: disable=unused-import
 
 FB_APP_ID = os.environ["FB_APP_ID"]
 FB_APP_SECRET = os.environ["FB_APP_SECRET"]
+PAGINATION_LIMIT = 5
 
 
 class InvalidUsage(Exception):
