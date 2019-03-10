@@ -2,7 +2,7 @@
     sha: '9a893ca5f66096953dff73084d06c7500caebeef'
     hooks:
     -   id: yapf
--   repo: https://github.com/pre-commit/mirrors-pylint
-    sha: 'f431e1c6991b21e828e28e73c38596bc5bf57525'
-    hooks:
-    -   id: pylint
+      #-   repo: https://github.com/pre-commit/mirrors-pylint
+      #   sha: 'f431e1c6991b21e828e28e73c38596bc5bf57525'
+      #   hooks:
+      #   -   id: pylint

@@ -58,6 +58,12 @@ def insert_new_item(restaurant_id,
         db.session.add(menu_item)
         db.session.flush()
         if section_name is not None:
+            if not db.session.query(MenuSection).get(
+                (restaurant_id, section_name)):
+                db.session.add(
+                    MenuSection(
+                        restaurant_id=restaurant_id, name=section_name))
+                db.session.flush()
             db.session.add(
                 MenuSectionAssignment(
                     restaurant_id=restaurant_id,

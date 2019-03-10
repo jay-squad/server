@@ -115,7 +115,7 @@ def get_restaurant_menu_items(restaurant_id):
                     'item': item,
                     'item_images': [item_image]
                 }
-        grouped_sections += grouped_items.values()
+        grouped_sections.append([menu_section, list(grouped_items.values())])
     return grouped_sections
 
 
