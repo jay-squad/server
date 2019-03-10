@@ -97,6 +97,18 @@ def get_restaurant(restaurant_id):
         database.get_restaurant_by_id(restaurant_id)).data)
 
 
+@APP.route('/restaurant/<restaurant_id>', methods=['PUT'])
+def update_restaurant(restaurant_id):
+    if not g.is_admin:
+        raise UserNotAdmin()
+
+    restaurant = database.get_restaurant_by_id(restaurant_id)
+    for k, v in request.form.items():
+        setattr(restaurant, k, v)
+    db.session.commit()
+    return jsonify(marshmallow_schema.RestaurantSchema().dump(restaurant).data)
+
+
 def get_restaurant_menu_items(restaurant_id):
     menu_sections = database.get_restaurant_menu_items(restaurant_id)
     section_list = [(menu_section.name if menu_section is not None else '',
@@ -361,10 +373,11 @@ def get_current_user():
 
 @APP.before_request
 def auth_admin():
-    print(request.form)
+    request.form = request.form.to_dict()
     if "admin_secret_key" in request.cookies and os.environ['ADMIN_SECRET_KEY'] == request.cookies["admin_secret_key"]:
         g.is_admin = True
     elif "admin_secret_key" in request.form and os.environ['ADMIN_SECRET_KEY'] == request.form['admin_secret_key']:
+        del request.form['admin_secret_key']
         g.is_admin = True
     else:
         g.is_admin = False
