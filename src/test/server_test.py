@@ -20,6 +20,10 @@ def post_json(client, url, json_dict):
     return client.post(url, data=json_dict)
 
 
+def get(client, url):
+    return client.get(url)
+
+
 def json_of_response(response):
     """Decode json from response"""
     return json.loads(response.data.decode('utf8'))
@@ -64,4 +68,12 @@ def test_restaurant_insert_json(client):
             "Main"
         })
 
+    assert response.status_code == 200
+
+
+def test_restaurant_search(client):
+    response = get(client, '/search/restaurant/')
+    assert response.status_code == 200
+
+    response = get(client, '/search/restaurant/hi')
     assert response.status_code == 200
