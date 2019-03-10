@@ -252,7 +252,7 @@ def query_restaurants(query):
     } for restaurant in search.find_restaurant("")]
 
 
-@APP.route('/search/restaurant', methods=['GET'])
+@APP.route('/search/restaurant/', methods=['GET'])
 def search_all_restaurant():
     return jsonify(query_restaurants(""))
 
