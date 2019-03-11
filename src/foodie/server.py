@@ -16,7 +16,7 @@ import src.foodie.settings.settings  # pylint: disable=unused-import
 
 FB_APP_ID = os.environ["FB_APP_ID"]
 FB_APP_SECRET = os.environ["FB_APP_SECRET"]
-PAGINATION_LIMIT = 5
+PAGINATION_LIMIT = 10000
 
 
 class InvalidUsage(Exception):
@@ -297,8 +297,8 @@ def query_restaurants(query):
         "menu":
         get_restaurant_menu_items(restaurant.id)[:6]
     } for restaurant in search.find_restaurant("")]
-    # session.
-    return restaurants
+    session["last_queried"] = restaurants[PAGINATION_LIMIT:]
+    return restaurants[:PAGINATION_LIMIT]
 
 
 @APP.route('/search/restaurant/', methods=['GET'])
@@ -312,11 +312,15 @@ def search_restaurant(query):
 
 
 def query_items(query):
-    return [{
-        "item": marshmallow_schema.MenuItemSchema().dump(item).data,
-        "image": marshmallow_schema.ItemImageSchema().dump(image).data
+    items = [{
+        "item":
+        marshmallow_schema.MenuItemSchema().dump(item).data,
+        "item_images": [marshmallow_schema.ItemImageSchema().dump(image).data]
     } for item, image in search.find_menu_item(query)
-            if approved_or_admin(image)]
+             if approved_or_admin(image)]
+    if g.fb_user:
+        session["last_queried"][g.fb_user['id']] = items[PAGINATION_LIMIT:]
+    return items[:PAGINATION_LIMIT]
 
 
 @APP.route('/search/item/', methods=['GET'])
@@ -334,6 +338,16 @@ def suggest_amendment():
     amendment = Amendment(**request.form, submitter_id=submitter_id_or_error())
     database._add_and_commit(amendment)
     return jsonify(success=True)
+
+
+# @APP.route('/pagination/next', methods=['GET'])
+# def pagination_next():
+#     if g.fb_user:
+#         last_queried = session["last_queried"][g.fb_user['id']]
+#         to_return = last_queried[:PAGINATION_LIMIT]
+#         session["last_queried"][g.fb_user['id']] = last_queried[PAGINATION_LIMIT:]
+
+#     return jsonify(to_return)
 
 
 @APP.before_request
