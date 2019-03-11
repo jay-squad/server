@@ -111,8 +111,8 @@ class MenuSectionAssignment(UserSubmitted, Record, BASE):
 class ItemImage(UserSubmitted, Record, BASE):
     __tablename__ = 'itemimages'
     link = db.Column(db.String, primary_key=True, nullable=False)
-    menu_item_id = db.Column(db.Integer, primary_key=True, nullable=False)
     restaurant_id = db.Column(db.Integer, primary_key=True, nullable=False)
+    menu_item_id = db.Column(db.Integer, primary_key=True, nullable=False)
     approval_status = db.Column(
         db.Enum(ApprovalStatus),
         default=
