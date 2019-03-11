@@ -180,6 +180,18 @@ def upload_menu_item(restaurant_id):
     return jsonify(marshmallow_schema.MenuItemSchema().dump(menu_item).data)
 
 
+@APP.route('/restaurant/<restaurant_id>/item/<menu_item_id>', methods=['PUT'])
+def update_menu_item(restaurant_id, menu_item_id):
+    if not g.is_admin:
+        raise UserNotAdmin()
+    menu_item = db.session.query(MenuItem).get_or_404((restaurant_id,
+                                                       menu_item_id))
+    for k, v in request.form.items():
+        setattr(menu_item, k, v)
+    db.session.commit()
+    return jsonify(marshmallow_schema.MenuItemSchema().dump(menu_item).data)
+
+
 @APP.route(
     '/restaurant/<restaurant_id>/item/<menu_item_id>', methods=['DELETE'])
 def delete_restaurant_menu_item(restaurant_id, menu_item_id):
@@ -217,6 +229,20 @@ def delete_menu_item_image(restaurant_id, menu_item_id):
                                                          menu_item_id))
     ensure_proper_submitter_for_delete(item_image.submitter_id)
     db.session.delete(item_image)
+    db.session.commit()
+    return jsonify(success=True)
+
+
+@APP.route(
+    '/restaurant/<restaurant_id>/item/<menu_item_id>/image', methods=['PUT'])
+def update_item_image_approval(restaurant_id, menu_item_id):
+    if not g.is_admin:
+        raise UserNotAdmin()
+    link = request.form['item_image']
+    item_image = db.session.query(ItemImage).get_or_404((link, restaurant_id,
+                                                         menu_item_id))
+
+    item_image.approval_status = request.form['approval_status']
     db.session.commit()
     return jsonify(success=True)
 
