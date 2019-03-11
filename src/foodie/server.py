@@ -327,6 +327,13 @@ def search_menu_item(query):
     return jsonify(query_items(query))
 
 
+@APP.route('/suggest_amendment', methods=['POST'])
+def suggest_amendment():
+    amendment = Amendment(**request.form, submitter_id=submitter_id_or_error())
+    database._add_and_commit(amendment)
+    return jsonify(success=True)
+
+
 @APP.before_request
 def generate_request_uuid():
     g.request_uuid = uuid.uuid4()

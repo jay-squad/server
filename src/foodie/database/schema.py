@@ -26,6 +26,11 @@ class ApprovalStatus(enum.Enum):
     rejected = 2
 
 
+class AmendmentType(enum.Enum):
+    amendment = 0
+    report = 1
+
+
 class FBUser(Record, BASE):
     __tablename__ = 'fbusers'
     id = db.Column(db.String, nullable=False, primary_key=True)
@@ -116,3 +121,16 @@ class ItemImage(UserSubmitted, Record, BASE):
     __table_args__ = (db.ForeignKeyConstraint(
         (menu_item_id, restaurant_id), (MenuItem.id, MenuItem.restaurant_id),
         ondelete='CASCADE'), )
+
+
+class Amendment(UserSubmitted, Record, BASE):
+    __tablename__ = 'amendments'
+    id = db.Column(
+        db.Integer, primary_key=True, autoincrement=True, nullable=False)
+    reason = db.Column(db.String, nullable=False)
+    identifier = db.Column(db.String, nullable=False)
+    specifics = db.Column(db.String, nullable=True)
+    amendment_type = db.Column(
+        db.Enum(AmendmentType),
+        nullable=False,
+        default=AmendmentType.amendment)
