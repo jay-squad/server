@@ -205,19 +205,6 @@ def delete_restaurant_menu_item(restaurant_id, menu_item_id):
     return jsonify(success=True)
 
 
-@APP.route('/restaurant/<restaurant_id>/item/<menu_item_id>', methods=['PUT'])
-def upload_menu_item_images(restaurant_id, menu_item_id):
-    if 'item_image' in request.form:
-        for image in request.form.getlist('item_image'):
-            database.insert_item_image(
-                submitter_id=submitter_id_or_error(),
-                restaurant_id=restaurant_id,
-                menu_item_id=menu_item_id,
-                link=image)
-    # TODO JACK: this probably doesn't work since it hasn't been tested
-    return database.get_menu_item_by_id(restaurant_id, menu_item_id)
-
-
 @APP.route(
     '/restaurant/<restaurant_id>/item/<menu_item_id>/image',
     methods=['DELETE'])
@@ -243,8 +230,9 @@ def update_item_image_approval(restaurant_id, menu_item_id):
                                                          menu_item_id))
     item_image.approval_status = request.form['approval_status']
 
-    fbuser = db.session.query(FBUser).get_or_404(item_image.submitter_id)
-    fbuser.points = fbuser.points + 50
+    if request.form['approval_status'] == ApprovalStatus.approved:
+        fbuser = db.session.query(FBUser).get_or_404(item_image.submitter_id)
+        fbuser.points = fbuser.points + 50
     db.session.commit()
     return jsonify(success=True)
 
