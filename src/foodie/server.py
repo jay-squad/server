@@ -226,6 +226,7 @@ def update_item_image_approval(restaurant_id, menu_item_id):
     if not g.is_admin:
         raise UserNotAdmin()
     link = request.form['item_image']
+    print(link, restaurant_id, menu_item_id)
     item_image = db.session.query(ItemImage).get_or_404((link, restaurant_id,
                                                          menu_item_id))
     print(item_image)
