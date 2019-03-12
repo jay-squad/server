@@ -227,14 +227,11 @@ def update_item_image_approval(restaurant_id, menu_item_id):
     if not g.is_admin:
         raise UserNotAdmin()
     link = request.form['item_image']
-    print(link, restaurant_id, menu_item_id)
     item_image = db.session.query(ItemImage).get_or_404((link, restaurant_id,
                                                          menu_item_id))
-    print(item_image)
     item_image.approval_status = request.form['approval_status']
 
     if request.form['approval_status'] == "approved":
-        print(item_image.submitter_id)
         fbuser = db.session.query(FBUser).get_or_404(item_image.submitter_id)
         fbuser.points = fbuser.points + 50
     db.session.commit()

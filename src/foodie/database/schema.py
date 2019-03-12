@@ -52,10 +52,6 @@ class UserSubmitted:
     def submitter_id(cls):
         return db.Column(db.String, db.ForeignKey("fbusers.id"), nullable=True)
 
-    @declared_attr
-    def submitter(cls):
-        return relationship('FBUser', lazy='joined')
-
 
 class Restaurant(UserSubmitted, Record, BASE):
     __tablename__ = 'restaurants'
