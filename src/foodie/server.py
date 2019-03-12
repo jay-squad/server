@@ -285,7 +285,7 @@ def query_restaurants(query):
         marshmallow_schema.RestaurantSchema().dump(restaurant).data,
         "menu":
         get_restaurant_menu_items(restaurant.id)[:6]
-    } for restaurant in search.find_restaurant("")]
+    } for restaurant in search.find_restaurant(query)]
 
 
 @APP.route('/search/restaurant/', methods=['GET'])
