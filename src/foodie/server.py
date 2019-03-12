@@ -16,7 +16,8 @@ import src.foodie.settings.settings  # pylint: disable=unused-import
 
 FB_APP_ID = os.environ["FB_APP_ID"]
 FB_APP_SECRET = os.environ["FB_APP_SECRET"]
-PAGINATION_LIMIT = 10000
+
+#TODO Jack: replace get_or_404 tuples with dicts
 
 
 class InvalidUsage(Exception):
@@ -282,14 +283,12 @@ def get_fb_user_by_id(fb_user_id):
 
 
 def query_restaurants(query):
-    restaurants = [{
+    return [{
         "restaurant":
         marshmallow_schema.RestaurantSchema().dump(restaurant).data,
         "menu":
         get_restaurant_menu_items(restaurant.id)[:6]
     } for restaurant in search.find_restaurant("")]
-    session["last_queried"] = restaurants[PAGINATION_LIMIT:]
-    return restaurants[:PAGINATION_LIMIT]
 
 
 @APP.route('/search/restaurant/', methods=['GET'])
@@ -303,15 +302,11 @@ def search_restaurant(query):
 
 
 def query_items(query):
-    items = [{
-        "item":
-        marshmallow_schema.MenuItemSchema().dump(item).data,
-        "item_images": [marshmallow_schema.ItemImageSchema().dump(image).data]
+    return [{
+        "item": marshmallow_schema.MenuItemSchema().dump(item).data,
+        "image": marshmallow_schema.ItemImageSchema().dump(image).data
     } for item, image in search.find_menu_item(query)
-             if approved_or_admin(image)]
-    if g.fb_user:
-        session["last_queried"][g.fb_user['id']] = items[PAGINATION_LIMIT:]
-    return items[:PAGINATION_LIMIT]
+            if approved_or_admin(image)]
 
 
 @APP.route('/search/item/', methods=['GET'])
