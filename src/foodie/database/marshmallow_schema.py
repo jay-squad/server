@@ -22,9 +22,11 @@ class NormalizedString(fields.String):
         return titlecase(stripped_string)
 
 
-class _FBUserSchema(ModelSchema):
+class FBUserSchemaNoSubmissions(ModelSchema):
     class Meta:
         model = FBUser
+        exclude = ('submitted_restaurants', 'submitted_menu_sections',
+                   'submitted_items', 'submitted_item_images')
 
 
 class RestaurantSchema(ModelSchema):
@@ -58,7 +60,7 @@ class ItemImageSchema(ModelSchema):
         model = ItemImage
 
 
-class FBUserSchema(_FBUserSchema):
+class FBUserSchema(FBUserSchemaNoSubmissions):
     submitted_restaurants = fields.Nested(
         RestaurantSchema, many=True, exclude=('fbuser', 'submitter'))
     submitted_menu_sections = fields.Nested(

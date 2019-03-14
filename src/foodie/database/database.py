@@ -135,8 +135,10 @@ def get_all_pending_images():
 
 
 def get_recently_updated_images(updated_since):
-    ordered_images = db.session.query(MenuItem, ItemImage) \
+    ordered_images = db.session.query(MenuItem, ItemImage, FBUser) \
         .join(ItemImage) \
+        .join(FBUser) \
+        .filter(ItemImage.submitter_id == FBUser.id) \
         .order_by(ItemImage.updated_at.desc())
     if updated_since:
         return ordered_images.filter(
