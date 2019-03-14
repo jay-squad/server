@@ -153,7 +153,6 @@ def get_recently_updated_images(updated_since):
 
 
 def get_fb_user_by_id(fb_user_id):
-    print(str(db.session.query(FBUser)))
     return db.session.query(FBUser).get_or_404(fb_user_id)
 
 
