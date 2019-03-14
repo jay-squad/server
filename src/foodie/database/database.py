@@ -1,4 +1,5 @@
 import os
+import datetime
 from src.foodie.database.db import db
 from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import sessionmaker
@@ -131,6 +132,17 @@ def get_all_pending_images():
     return db.session.query(MenuItem, ItemImage) \
         .join(ItemImage) \
         .filter(ItemImage.approval_status == ApprovalStatus.pending).all()
+
+
+def get_recently_updated_images(updated_since):
+    ordered_images = db.session.query(MenuItem, ItemImage) \
+        .join(ItemImage) \
+        .order_by(ItemImage.updated_at.desc())
+    if updated_since:
+        return ordered_images.filter(
+            ItemImage.updated_at > updated_since).all()
+    else:
+        return ordered_images.all()
 
 
 def get_fb_user_by_id(fb_user_id):

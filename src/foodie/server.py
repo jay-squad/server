@@ -329,6 +329,25 @@ def get_pending_images():
     } for item, image in database.get_all_pending_images()])
 
 
+@APP.route('/image/recent', methods=['GET'])
+def get_recently_updated_images():
+    if not g.is_admin:
+        raise UserNotAdmin()
+
+    if request.form.get("updated_since"):
+        updated_since = datetime.datetime.utcfromtimestamp(
+            int(request.form["updated_since"]))
+    else:
+        updated_since = None
+
+    return jsonify([{
+        "item":
+        marshmallow_schema.MenuItemSchema().dump(item).data,
+        "image":
+        marshmallow_schema.ItemImageSchema().dump(image).data
+    } for item, image in database.get_recently_updated_images(updated_since)])
+
+
 @APP.route('/suggest_amendment', methods=['POST'])
 def suggest_amendment():
     amendment = Amendment(**request.form, submitter_id=submitter_id_or_error())
