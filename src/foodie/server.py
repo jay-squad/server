@@ -325,8 +325,10 @@ def get_pending_images():
         "item":
         marshmallow_schema.MenuItemSchema().dump(item).data,
         "image":
-        marshmallow_schema.ItemImageSchema().dump(image).data
-    } for item, image in database.get_all_pending_images()])
+        marshmallow_schema.ItemImageSchema().dump(image).data,
+        "submitter":
+        marshmallow_schema.FBUserSchemaNoSubmissions().dump(submitter).data
+    } for item, image, submitter in database.get_all_pending_images()])
 
 
 @APP.route('/image/recent', methods=['GET'])
@@ -346,7 +348,7 @@ def get_recently_updated_images():
         "image":
         marshmallow_schema.ItemImageSchema().dump(image).data,
         "submitter":
-        marshmallow_schema.FBUserSchema().dump(submitter).data
+        marshmallow_schema.FBUserSchemaNoSubmissions().dump(submitter).data
     } for item, image, submitter in database.get_recently_updated_images(
         updated_since)])
 

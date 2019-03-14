@@ -129,8 +129,10 @@ def get_restaurant_menu_items(restaurant_id):
 
 
 def get_all_pending_images():
-    return db.session.query(MenuItem, ItemImage) \
+    return db.session.query(MenuItem, ItemImage, FBUser) \
         .join(ItemImage) \
+        .join(FBUser) \
+        .filter(ItemImage.submitter_id == FBUser.id) \
         .filter(ItemImage.approval_status == ApprovalStatus.pending).all()
 
 
