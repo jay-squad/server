@@ -2,7 +2,7 @@ import os
 import datetime
 from src.foodie.database.db import db
 from sqlalchemy import create_engine, or_
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, noload
 from src.foodie.database.schema import Restaurant, MenuSection, MenuItem, MenuSectionAssignment, ItemImage, FBUser, ApprovalStatus
 
 import src.foodie.settings.settings  # pylint: disable=unused-import
@@ -133,7 +133,9 @@ def get_all_pending_images():
         .join(ItemImage) \
         .join(FBUser) \
         .filter(ItemImage.submitter_id == FBUser.id) \
-        .filter(ItemImage.approval_status == ApprovalStatus.pending).all()
+        .filter(ItemImage.approval_status == ApprovalStatus.pending) \
+        .options(noload('*'))\
+        .all()
 
 
 def get_recently_updated_images(updated_since):
@@ -141,6 +143,7 @@ def get_recently_updated_images(updated_since):
         .join(ItemImage) \
         .join(FBUser) \
         .filter(ItemImage.submitter_id == FBUser.id) \
+        .options(noload('*'))\
         .order_by(ItemImage.updated_at.desc())
     if updated_since:
         return ordered_images.filter(
@@ -150,6 +153,7 @@ def get_recently_updated_images(updated_since):
 
 
 def get_fb_user_by_id(fb_user_id):
+    print(str(db.session.query(FBUser)))
     return db.session.query(FBUser).get_or_404(fb_user_id)
 
 

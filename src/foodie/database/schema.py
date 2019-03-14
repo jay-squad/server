@@ -38,10 +38,10 @@ class FBUser(Record, BASE):
     profile_url = db.Column(db.String, nullable=False)
     access_token = db.Column(db.String, nullable=False)
     points = db.Column(db.Integer, nullable=False, default=0)
-    submitted_restaurants = relationship('Restaurant', lazy='joined')
-    submitted_menu_sections = relationship('MenuSection', lazy='joined')
-    submitted_items = relationship('MenuItem', lazy='joined')
-    submitted_item_images = relationship('ItemImage', lazy='joined')
+    submitted_restaurants = relationship('Restaurant', lazy='select')
+    submitted_menu_sections = relationship('MenuSection', lazy='select')
+    submitted_items = relationship('MenuItem', lazy='select')
+    submitted_item_images = relationship('ItemImage', lazy='select')
 
 
 class UserSubmitted:
