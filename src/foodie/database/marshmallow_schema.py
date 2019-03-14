@@ -1,8 +1,15 @@
 # pylint: disable=wildcard-import, too-few-public-methods, missing-docstring, unused-wildcard-import, unused-argument
+import re
 from src.foodie.database.schema import *
 from marshmallow_sqlalchemy import ModelSchema
 from marshmallow import fields
 from marshmallow_enum import EnumField
+
+
+def titlecase(s):
+    return re.sub(r"[A-Za-z]+('[A-Za-z]+)?",
+                  lambda mo: mo.group(0)[0].upper() + mo.group(0)[1:].lower(),
+                  s)
 
 
 class NormalizedString(fields.String):
@@ -11,7 +18,8 @@ class NormalizedString(fields.String):
         super(fields.String, self).__init__(**kargs)
 
     def serialize(self, attr, obj, accessor=None):
-        return obj.__getattribute__(self._attribute).title()
+        stripped_string = obj.__getattribute__(self._attribute).strip()
+        return titlecase(stripped_string)
 
 
 class _FBUserSchema(ModelSchema):

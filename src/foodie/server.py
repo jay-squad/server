@@ -316,6 +316,19 @@ def search_menu_item(query):
     return jsonify(query_items(query))
 
 
+@APP.route('/image/pending', methods=['GET'])
+def get_pending_images():
+    if not g.is_admin:
+        raise UserNotAdmin()
+
+    return jsonify([{
+        "item":
+        marshmallow_schema.MenuItemSchema().dump(item).data,
+        "image":
+        marshmallow_schema.ItemImageSchema().dump(image).data
+    } for item, image in database.get_all_pending_images()])
+
+
 @APP.route('/suggest_amendment', methods=['POST'])
 def suggest_amendment():
     amendment = Amendment(**request.form, submitter_id=submitter_id_or_error())

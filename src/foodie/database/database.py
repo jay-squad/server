@@ -2,7 +2,7 @@ import os
 from src.foodie.database.db import db
 from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import sessionmaker
-from src.foodie.database.schema import Restaurant, MenuSection, MenuItem, MenuSectionAssignment, ItemImage, FBUser
+from src.foodie.database.schema import Restaurant, MenuSection, MenuItem, MenuSectionAssignment, ItemImage, FBUser, ApprovalStatus
 
 import src.foodie.settings.settings  # pylint: disable=unused-import
 
@@ -125,6 +125,12 @@ def get_restaurant_menu_items(restaurant_id):
              get_menu_section_contents(restaurant_id, menu_section.name))
             for menu_section in menu_sections
             ] + [(None, get_sectionless_items(restaurant_id))]
+
+
+def get_all_pending_images():
+    return db.session.query(MenuItem, ItemImage) \
+        .join(ItemImage) \
+        .filter(ItemImage.approval_status == ApprovalStatus.pending).all()
 
 
 def get_fb_user_by_id(fb_user_id):
