@@ -63,6 +63,12 @@ class Restaurant(UserSubmitted, Record, BASE):
     website = db.Column(db.String, nullable=True)
     phone_number = db.Column(db.String, nullable=True)
     cuisine_type = db.Column(db.String, nullable=True)
+    approval_status = db.Column(
+        db.Enum(ApprovalStatus),
+        default=
+        (lambda _: ApprovalStatus.approved if g.is_admin else ApprovalStatus.pending
+         ),
+        nullable=False)
 
 
 class MenuSection(UserSubmitted, Record, BASE):
