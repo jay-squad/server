@@ -3,7 +3,7 @@ import os
 import requests
 import uuid
 
-from flask import Flask, request, jsonify, session, g
+from flask import Flask, request, jsonify, g
 from src.foodie.database import database
 from src.foodie.database import marshmallow_schema
 from src.foodie.database.schema import *
@@ -18,6 +18,10 @@ FB_APP_ID = os.environ["FB_APP_ID"]
 FB_APP_SECRET = os.environ["FB_APP_SECRET"]
 
 #TODO Jack: replace get_or_404 tuples with dicts
+
+#TODO Jack: This is kinda wonky, but flask Session doesn't actually do what we want it to
+# do
+session = {}
 
 
 class InvalidUsage(Exception):
@@ -315,6 +319,7 @@ def query_restaurants(query, pagination_limit):
 
 
 @APP.route('/search/restaurant/', methods=['GET'])
+@APP.route('/search/restaurant', methods=['GET'])
 def search_all_restaurant():
     return jsonify(query_restaurants("", request.form.get("pagination_limit")))
 
@@ -340,6 +345,7 @@ def query_items(query, pagination_limit):
 
 
 @APP.route('/search/item/', methods=['GET'])
+@APP.route('/search/item', methods=['GET'])
 def search_all_menu_item():
     return jsonify(query_items("", request.form.get("pagination_limit")))
 
@@ -507,6 +513,5 @@ def auth_admin():
         g.is_admin = False
 
 
-APP.secret_key = os.environ['FLASK_SECRET_KEY']
 if __name__ == "__main__":
     APP.run(host='0.0.0.0', port=os.environ['PORT'])
