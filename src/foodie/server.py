@@ -394,10 +394,10 @@ def suggest_amendment():
 
 @APP.route('/pagination/next', methods=['GET'])
 def pagination_next():
-    if not "results_key" in request.form:
+    if not "next" in request.form:
         raise InvalidUsage("No results key provided")
 
-    results_key = request.form["results_key"]
+    results_key = request.form["next"]
     if results_key in session:
         results = session[results_key]
         pagination_limit = request.form.get("pagination_limit")
