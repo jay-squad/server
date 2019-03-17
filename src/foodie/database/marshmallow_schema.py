@@ -23,6 +23,7 @@ class NormalizedString(fields.String):
 
 
 class RestaurantSchema(ModelSchema):
+    approval_status = EnumField(ApprovalStatus)
     normalized_name = NormalizedString('name')
 
     class Meta:

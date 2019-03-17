@@ -298,7 +298,8 @@ def query_restaurants(query, pagination_limit):
         marshmallow_schema.RestaurantSchema().dump(restaurant).data,
         "menu":
         get_restaurant_menu_items(restaurant.id)
-    } for restaurant in search.find_restaurant(query)]
+    } for restaurant in search.find_restaurant(query)
+                             if approved_or_admin(restaurant)]
 
     restaurant_menu_pairs = sorted(
         restaurant_menu_pairs, key=lambda r: len(r["menu"]), reverse=True)
