@@ -448,9 +448,11 @@ def get_current_user():
 
     # Set the user in the session dictionary as a global g.user and bail out
     # of this function early.
-    if session.get("fb_user"):
-        g.fb_user = session.get("fb_user")
-        return
+
+    # TODO Jack actually figure out how sessions work
+    # if session.get("fb_user"):
+    #     g.fb_user = session.get("fb_user")
+    #     return
 
     fb_base_url = "https://graph.facebook.com"
     profile = None
