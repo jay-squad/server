@@ -128,6 +128,15 @@ def get_restaurant_menu_items(restaurant_id):
             ] + [(None, get_sectionless_items(restaurant_id))]
 
 
+def get_all_pending_restaurants():
+    return db.session.query(Restaurant, FBUser) \
+        .join(FBUser) \
+        .filter(Restaurant.submitter_id == FBUser.id) \
+        .filter(Restaurant.approval_status == ApprovalStatus.pending) \
+        .options(noload('*'))\
+        .all()
+
+
 def get_all_pending_images():
     return db.session.query(MenuItem, ItemImage, FBUser) \
         .join(ItemImage) \

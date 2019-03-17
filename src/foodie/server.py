@@ -355,7 +355,21 @@ def search_menu_item(query):
     return jsonify(query_items(query, request.form.get("pagination_limit")))
 
 
+@APP.route('/pending/restaurant', methods=['GET'])
+def get_pending_restaurants():
+    if not g.is_admin:
+        raise UserNotAdmin()
+
+    return jsonify([{
+        "restaurant":
+        marshmallow_schema.RestaurantSchema().dump(restaurant).data,
+        "submitter":
+        marshmallow_schema.FBUserSchemaNoSubmissions().dump(submitter).data
+    } for restaurant, submitter in database.get_all_pending_restaurants()])
+
+
 @APP.route('/image/pending', methods=['GET'])
+@APP.route('/pending/image', methods=['GET'])
 def get_pending_images():
     if not g.is_admin:
         raise UserNotAdmin()
