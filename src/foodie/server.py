@@ -279,41 +279,73 @@ def get_fb_user_by_id(fb_user_id):
     return get_fb_user_information(fb_user_id)
 
 
-def query_restaurants(query):
-    return [{
+def get_results_key(request_uuid):
+    return "results_" + str(request_uuid)
+
+
+def paginate_results(results, pagination_limit):
+    results_key = get_results_key(g.request_uuid)
+    session[results_key] = results[pagination_limit:]
+    return {
+        "results": results[:pagination_limit],
+        "next": results_key if results[pagination_limit:] else None
+    }
+
+
+def query_restaurants(query, pagination_limit):
+    restaurant_menu_pairs = [{
         "restaurant":
         marshmallow_schema.RestaurantSchema().dump(restaurant).data,
         "menu":
-        get_restaurant_menu_items(restaurant.id)[:6]
+        get_restaurant_menu_items(restaurant.id)
     } for restaurant in search.find_restaurant(query)]
+
+    restaurant_menu_pairs = sorted(
+        restaurant_menu_pairs, key=lambda r: len(r["menu"]), reverse=True)
+    restaurant_menu_pairs = [{
+        "restaurant": restaurant_menu_pair["restaurant"],
+        "menu": restaurant_menu_pair["menu"][:6]
+    } for restaurant_menu_pair in restaurant_menu_pairs]
+
+    if pagination_limit:
+        return paginate_results(restaurant_menu_pairs, int(pagination_limit))
+    else:
+        return restaurant_menu_pairs
 
 
 @APP.route('/search/restaurant/', methods=['GET'])
 def search_all_restaurant():
-    return jsonify(query_restaurants(""))
+    return jsonify(query_restaurants("", request.form.get("pagination_limit")))
 
 
 @APP.route('/search/restaurant/<query>', methods=['GET'])
 def search_restaurant(query):
-    return jsonify(query_restaurants(query))
+    return jsonify(
+        query_restaurants(query, request.form.get("pagination_limit")))
 
 
-def query_items(query):
-    return [{
-        "item": marshmallow_schema.MenuItemSchema().dump(item).data,
-        "image": marshmallow_schema.ItemImageSchema().dump(image).data
+def query_items(query, pagination_limit):
+    item_image_pairs = [{
+        "item":
+        marshmallow_schema.MenuItemSchema().dump(item).data,
+        "image":
+        marshmallow_schema.ItemImageSchema().dump(image).data
     } for item, image in search.find_menu_item(query)
-            if approved_or_admin(image)]
+                        if approved_or_admin(image)]
+    if pagination_limit:
+        return paginate_results(item_image_pairs, int(pagination_limit))
+    else:
+        return item_image_pairs
 
 
 @APP.route('/search/item/', methods=['GET'])
 def search_all_menu_item():
-    return jsonify(query_items(""))
+    return jsonify(query_items("", request.form.get("pagination_limit")))
 
 
 @APP.route('/search/item/<query>', methods=['GET'])
 def search_menu_item(query):
-    return jsonify(query_items(query))
+    return jsonify(query_items(query, request.form.get("pagination_limit")))
 
 
 @APP.route('/image/pending', methods=['GET'])
@@ -360,14 +392,21 @@ def suggest_amendment():
     return jsonify(success=True)
 
 
-# @APP.route('/pagination/next', methods=['GET'])
-# def pagination_next():
-#     if g.fb_user:
-#         last_queried = session["last_queried"][g.fb_user['id']]
-#         to_return = last_queried[:PAGINATION_LIMIT]
-#         session["last_queried"][g.fb_user['id']] = last_queried[PAGINATION_LIMIT:]
+@APP.route('/pagination/next', methods=['GET'])
+def pagination_next():
+    if not "results_key" in request.form:
+        raise InvalidUsage("No results key provided")
 
-#     return jsonify(to_return)
+    results_key = request.form["results_key"]
+    if results_key in session:
+        results = session[results_key]
+        pagination_limit = request.form.get("pagination_limit")
+        if pagination_limit:
+            return jsonify(paginate_results(results, int(pagination_limit)))
+        else:
+            return jsonify(results)
+    else:
+        raise InvalidUsage("Last query does not exist", status_code=404)
 
 
 @APP.before_request
