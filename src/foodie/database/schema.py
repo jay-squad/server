@@ -2,11 +2,17 @@ import datetime
 
 from flask import g
 from src.foodie.database.db import db
+from src.foodie.app import APP
+
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import relationship
+from sqlalchemy.schema import Index
 import enum
 
-BASE = declarative_base()
+migrate = Migrate(APP, db)
+BASE = db.Model
 
 
 class Record:
@@ -109,7 +115,8 @@ class MenuSectionAssignment(UserSubmitted, Record, BASE):
                       db.ForeignKeyConstraint(
                           [section_name, restaurant_id],
                           [MenuSection.name, MenuSection.restaurant_id],
-                          ondelete='CASCADE'))
+                          ondelete='CASCADE',
+                          onupdate='CASCADE'))
 
 
 class ItemImage(UserSubmitted, Record, BASE):
@@ -123,6 +130,7 @@ class ItemImage(UserSubmitted, Record, BASE):
         (lambda _: ApprovalStatus.approved if g.is_admin else ApprovalStatus.pending
          ),
         nullable=False)
+
     __table_args__ = (db.ForeignKeyConstraint(
         (menu_item_id, restaurant_id), (MenuItem.id, MenuItem.restaurant_id),
         ondelete='CASCADE'), )
@@ -139,3 +147,9 @@ class Amendment(UserSubmitted, Record, BASE):
         db.Enum(AmendmentType),
         nullable=False,
         default=AmendmentType.amendment)
+
+
+Index('restaurant_submitter_index', Restaurant.submitter_id)
+Index('menu_section_submitter_index', MenuSection.submitter_id)
+Index('menu_item_submitter_index', MenuItem.submitter_id)
+Index('item_image_submitter_index', ItemImage.submitter_id)

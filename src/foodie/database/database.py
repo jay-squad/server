@@ -7,8 +7,6 @@ from src.foodie.database.schema import Restaurant, MenuSection, MenuItem, MenuSe
 
 import src.foodie.settings.settings  # pylint: disable=unused-import
 
-ENGINE = create_engine(os.environ['HEROKU_POSTGRESQL_CHARCOAL_URL'])
-
 
 def _add_and_commit(model):
     db.session.add(model)

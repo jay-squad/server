@@ -1,5 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
 from src.foodie.app import APP
+from flask_sqlalchemy import SQLAlchemy
 
-APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(APP)
