@@ -10,6 +10,7 @@ from src.foodie.database.schema import *
 from src.foodie.search import search
 from src.foodie.app import APP
 from src.foodie.database.db import db
+from sqlalchemy.exc import IntegrityError
 from itertools import groupby
 
 import src.foodie.settings.settings  # pylint: disable=unused-import
@@ -86,6 +87,21 @@ def handle_invalid_usage(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
+
+
+@APP.errorhandler(IntegrityError)
+def handle_integrity_error(error):
+    if not g.is_admin:
+        raise error
+    else:
+        return jsonify({
+            "message":
+            str(error),
+            "info":
+            "You are likely seeing this, because you attempted to associate an update with a foreign key that does not exist",
+            "status_code":
+            400
+        })
 
 
 @APP.route('/restaurant', methods=['POST'])
@@ -176,6 +192,20 @@ def delete_restaurant_menu_section(restaurant_id, name):
     return jsonify(success=True)
 
 
+@APP.route('/restaurant/<restaurant_id>/section/<name>', methods=['PUT'])
+def update_restaurant_menu_section(restaurant_id, name):
+    if not g.is_admin:
+        raise UserNotAdmin()
+
+    menu_section = db.session.query(MenuSection).get_or_404((restaurant_id,
+                                                             name))
+    for k, v in request.form.items():
+        setattr(menu_section, k, v)
+    db.session.commit()
+    return jsonify(
+        marshmallow_schema.MenuSectionSchema().dump(menu_section).data)
+
+
 @APP.route('/restaurant/<restaurant_id>/item', methods=['POST'])
 def upload_menu_item(restaurant_id):
     '''insert a new menu item for a restaurant'''
@@ -195,6 +225,33 @@ def update_menu_item(restaurant_id, menu_item_id):
         setattr(menu_item, k, v)
     db.session.commit()
     return jsonify(marshmallow_schema.MenuItemSchema().dump(menu_item).data)
+
+
+@APP.route(
+    '/restaurant/<restaurant_id>/item/<menu_item_id>/section', methods=['PUT'])
+def update_menu_item_section(restaurant_id, menu_item_id):
+    if not g.is_admin:
+        raise UserNotAdmin()
+
+    if not "section_name" in request.form:
+        raise InvalidUsage("New section name not provided!", status_code=400)
+
+    section_name = request.form["section_name"]
+    menu_section_assignment = db.session.query(MenuSectionAssignment) \
+                              .filter(MenuSectionAssignment.restaurant_id == restaurant_id) \
+                              .filter(MenuSectionAssignment.menu_item_id == menu_item_id) \
+                              .first() # Assuming single entry per menuitem right now
+
+    if not menu_section_assignment:
+        database.insert_menu_section_assignment(
+            restaurant_id=restaurant_id,
+            menu_item_id=menu_item_id,
+            section_name=section_name)
+
+    else:
+        menu_section_assignment.section_name = section_name
+    db.session.commit()
+    return jsonify(success=True)
 
 
 @APP.route(

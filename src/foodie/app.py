@@ -9,4 +9,3 @@ APP.config['SQLALCHEMY_DATABASE_URI'] = os.environ[
     'HEROKU_POSTGRESQL_CHARCOAL_URL']
 
 # SESSION_TYPE = 'sqlalchemy'
-APP.config.from_object(__name__)
