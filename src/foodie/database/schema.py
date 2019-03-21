@@ -102,6 +102,7 @@ class MenuItem(UserSubmitted, Record, BASE):
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=True)
     price = db.Column(db.Float, nullable=True)
+    section = relationship('MenuSectionAssignment', lazy='joined')
 
 
 class MenuSectionAssignment(UserSubmitted, Record, BASE):

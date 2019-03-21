@@ -38,8 +38,19 @@ class MenuSectionSchema(ModelSchema):
         model = MenuSection
 
 
+# Unsure whether item -> section is one-to-one or not,
+# we may need to change this code to return the mapped list if not
+class SectionSerializer(fields.String):
+    def serialize(self, attr, obj, accessor=None):
+        if obj.section:
+            return obj.section[0].section_name
+        else:
+            return None
+
+
 class MenuItemSchema(ModelSchema):
     normalized_name = NormalizedString('name')
+    section = SectionSerializer()
 
     class Meta:
         include_fk = True
