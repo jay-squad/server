@@ -10,7 +10,7 @@ from src.foodie.database.schema import *
 from src.foodie.search import search
 from src.foodie.app import APP
 from src.foodie.database.db import db
-from sqlalchemy.exc import IntegrityError
+from src.foodie.exceptions.exceptions import *
 from itertools import groupby
 
 import src.foodie.settings.settings  # pylint: disable=unused-import
@@ -23,38 +23,6 @@ FB_APP_SECRET = os.environ["FB_APP_SECRET"]
 #TODO Jack: This is kinda wonky, but flask Session doesn't actually do what we want it to
 # do
 session = {}
-
-
-class InvalidUsage(Exception):
-    status_code = 400
-
-    def __init__(self, message, status_code=None, payload=None):
-        Exception.__init__(self)
-        self.message = message
-        if status_code is not None:
-            self.status_code = status_code
-        self.payload = payload
-
-    def to_dict(self):
-        rv = dict(self.payload or ())
-        rv['message'] = self.message
-        return rv
-
-
-class UserNotFacebookAuthed(InvalidUsage):
-    def __init__(self):
-        InvalidUsage.__init__(
-            self,
-            "User must be Facebook authenticated to perform this action",
-            status_code=403)
-
-
-class UserNotAdmin(InvalidUsage):
-    def __init__(self):
-        InvalidUsage.__init__(
-            self,
-            "User must be an Admin to perform this action",
-            status_code=403)
 
 
 def ensure_proper_submitter_for_delete(submitter_id):
@@ -91,17 +59,14 @@ def handle_invalid_usage(error):
 
 @APP.errorhandler(IntegrityError)
 def handle_integrity_error(error):
-    if not g.is_admin:
-        raise error
-    else:
-        return jsonify({
-            "message":
-            str(error),
-            "info":
-            "You are likely seeing this, because you attempted to associate an update with a foreign key that does not exist",
-            "status_code":
-            400
-        })
+    return jsonify({
+        "message":
+        str(error),
+        "info":
+        "You are likely seeing this, because you attempted to associate an update with a foreign key that does not exist",
+        "status_code":
+        400
+    })
 
 
 @APP.route('/restaurant', methods=['POST'])

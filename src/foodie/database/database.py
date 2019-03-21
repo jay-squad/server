@@ -69,12 +69,22 @@ def insert_new_item(restaurant_id,
                     submitter_id=submitter_id,
                     menu_item_id=menu_item.id,
                     section_name=section_name))
-    db.session.add(
-        ItemImage(
-            restaurant_id=restaurant_id,
-            submitter_id=submitter_id,
-            menu_item_id=menu_item.id,
-            link=item_image))
+    existing_image = db.session.query(ItemImage).get(
+        (item_image, restaurant_id, menu_item.id))
+    if existing_image:
+        if existing_image.approval_status == ApprovalStatus.rejected:
+            existing_image.approval_status = ApprovalStatus.pending
+        else:
+            raise InvalidUsage(
+                "Resubmission of approved or pending image should not be possible!"
+            )
+    else:
+        db.session.add(
+            ItemImage(
+                restaurant_id=restaurant_id,
+                submitter_id=submitter_id,
+                menu_item_id=menu_item.id,
+                link=item_image))
     db.session.commit()
     return menu_item
 
