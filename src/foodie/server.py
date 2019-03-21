@@ -3,7 +3,7 @@ import os
 import requests
 import uuid
 
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, g, Response
 from src.foodie.database import database
 from src.foodie.database import marshmallow_schema
 from src.foodie.database.schema import *
@@ -492,9 +492,11 @@ def pagination_next():
         raise InvalidUsage("Last query does not exist", status_code=404)
 
 
-@APP.route('/text/<key>', methods=['GET'])
-def get_text_map(key):
-    return db.session.query(TextMap).get_or_404(key).data
+@APP.route('/blob/<key>', methods=['GET'])
+def get_blob(key):
+    return Response(
+        db.session.query(Blob).get_or_404(key).data,
+        content_type='application/json ')
 
 
 @APP.before_request

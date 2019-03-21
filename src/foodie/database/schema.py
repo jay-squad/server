@@ -149,8 +149,8 @@ class Amendment(UserSubmitted, Record, BASE):
         default=AmendmentType.amendment)
 
 
-class TextMap(Record, BASE):
-    __tablename__ = 'textmap'
+class Blob(Record, BASE):
+    __tablename__ = 'blobs'
     key = db.Column(db.String, nullable=False, primary_key=True)
     data = db.Column(db.String, nullable=False)
 
