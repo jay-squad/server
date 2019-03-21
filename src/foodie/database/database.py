@@ -136,9 +136,12 @@ def get_all_pending_restaurants():
 
 
 def get_all_pending_images():
-    return db.session.query(MenuItem, ItemImage, FBUser) \
+    return db.session.query(MenuItem, ItemImage, FBUser, MenuSectionAssignment) \
         .join(ItemImage) \
         .join(FBUser) \
+        .join(MenuSectionAssignment) \
+        .filter(MenuItem.id == ItemImage.menu_item_id) \
+        .filter(MenuItem.id == MenuSectionAssignment.menu_item_id) \
         .filter(ItemImage.submitter_id == FBUser.id) \
         .filter(ItemImage.approval_status == ApprovalStatus.pending) \
         .options(noload('*'))\
@@ -146,9 +149,12 @@ def get_all_pending_images():
 
 
 def get_recently_updated_images(updated_since):
-    ordered_images = db.session.query(MenuItem, ItemImage, FBUser) \
+    ordered_images = db.session.query(MenuItem, ItemImage, FBUser, MenuSectionAssignment) \
         .join(ItemImage) \
         .join(FBUser) \
+        .join(MenuSectionAssignment) \
+        .filter(MenuItem.id == ItemImage.menu_item_id) \
+        .filter(MenuItem.id == MenuSectionAssignment.menu_item_id) \
         .filter(ItemImage.submitter_id == FBUser.id) \
         .options(noload('*'))\
         .order_by(ItemImage.updated_at.desc())
