@@ -487,6 +487,11 @@ def pagination_next():
         raise InvalidUsage("Last query does not exist", status_code=404)
 
 
+@APP.route('/text/<key>', methods=['GET'])
+def get_text_map(key):
+    return db.session.query(TextMap).get_or_404(key).data
+
+
 @APP.before_request
 def generate_request_uuid():
     g.request_uuid = uuid.uuid4()

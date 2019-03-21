@@ -149,6 +149,12 @@ class Amendment(UserSubmitted, Record, BASE):
         default=AmendmentType.amendment)
 
 
+class TextMap(Record, BASE):
+    __tablename__ = 'textmap'
+    key = db.Column(db.String, nullable=False, primary_key=True)
+    data = db.Column(db.String, nullable=False)
+
+
 Index('restaurant_submitter_index', Restaurant.submitter_id)
 Index('menu_section_submitter_index', MenuSection.submitter_id)
 Index('menu_item_submitter_index', MenuItem.submitter_id)
