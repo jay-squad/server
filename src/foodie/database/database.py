@@ -2,7 +2,7 @@ import os
 import datetime
 from src.foodie.database.db import db
 from sqlalchemy import create_engine, or_
-from sqlalchemy.orm import sessionmaker, noload
+from sqlalchemy.orm import sessionmaker, noload, joinedload
 from src.foodie.database.schema import Restaurant, MenuSection, MenuItem, MenuSectionAssignment, ItemImage, FBUser, ApprovalStatus
 
 import src.foodie.settings.settings  # pylint: disable=unused-import
@@ -146,27 +146,25 @@ def get_all_pending_restaurants():
 
 
 def get_all_pending_images():
-    return db.session.query(MenuItem, ItemImage, FBUser, MenuSectionAssignment) \
+    return db.session.query(MenuItem, ItemImage, FBUser) \
         .join(ItemImage) \
         .join(FBUser) \
-        .join(MenuSectionAssignment) \
         .filter(MenuItem.id == ItemImage.menu_item_id) \
-        .filter(MenuItem.id == MenuSectionAssignment.menu_item_id) \
         .filter(ItemImage.submitter_id == FBUser.id) \
         .filter(ItemImage.approval_status == ApprovalStatus.pending) \
         .options(noload('*'))\
+        .options(joinedload('section'))\
         .all()
 
 
 def get_recently_updated_images(updated_since):
-    ordered_images = db.session.query(MenuItem, ItemImage, FBUser, MenuSectionAssignment) \
+    ordered_images = db.session.query(MenuItem, ItemImage, FBUser) \
         .join(ItemImage) \
         .join(FBUser) \
-        .join(MenuSectionAssignment) \
         .filter(MenuItem.id == ItemImage.menu_item_id) \
-        .filter(MenuItem.id == MenuSectionAssignment.menu_item_id) \
         .filter(ItemImage.submitter_id == FBUser.id) \
         .options(noload('*'))\
+        .options(joinedload('section'))\
         .order_by(ItemImage.updated_at.desc())
     if updated_since:
         return ordered_images.filter(

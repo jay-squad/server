@@ -402,11 +402,8 @@ def get_pending_images():
         "image":
         marshmallow_schema.ItemImageSchema().dump(image).data,
         "submitter":
-        marshmallow_schema.FBUserSchemaNoSubmissions().dump(submitter).data,
-        "section":
-        menu_section_assignment.section_name
-    } for item, image, submitter, menu_section_assignment in
-                    database.get_all_pending_images()])
+        marshmallow_schema.FBUserSchemaNoSubmissions().dump(submitter).data
+    } for item, image, submitter in database.get_all_pending_images()])
 
 
 @APP.route('/image/recent', methods=['GET'])
@@ -426,11 +423,9 @@ def get_recently_updated_images():
         "image":
         marshmallow_schema.ItemImageSchema().dump(image).data,
         "submitter":
-        marshmallow_schema.FBUserSchemaNoSubmissions().dump(submitter).data,
-        "section":
-        menu_section_assignment.section_name
-    } for item, image, submitter, menu_section_assignment in
-                    database.get_recently_updated_images(updated_since)])
+        marshmallow_schema.FBUserSchemaNoSubmissions().dump(submitter).data
+    } for item, image, submitter in database.get_recently_updated_images(
+        updated_since)])
 
 
 @APP.route('/suggest_amendment', methods=['POST'])
