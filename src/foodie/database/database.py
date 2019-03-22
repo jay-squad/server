@@ -84,6 +84,7 @@ def insert_new_item(restaurant_id,
                 restaurant_id=restaurant_id,
                 submitter_id=submitter_id,
                 menu_item_id=menu_item.id,
+                description=description,
                 link=item_image))
     db.session.commit()
     return menu_item

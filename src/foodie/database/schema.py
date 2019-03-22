@@ -125,6 +125,7 @@ class ItemImage(UserSubmitted, Record, BASE):
     link = db.Column(db.String, primary_key=True, nullable=False)
     restaurant_id = db.Column(db.Integer, primary_key=True, nullable=False)
     menu_item_id = db.Column(db.Integer, primary_key=True, nullable=False)
+    description = db.Column(db.String, nullable=True)
     approval_status = db.Column(
         db.Enum(ApprovalStatus),
         default=
