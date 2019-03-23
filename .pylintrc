@@ -1,3 +1,8 @@
+[FORMAT]
+max-line-length=120
+
 [MESSAGES CONTROL]
 
-disable=F0401
+# F0401: unable-to-import
+# C0330: bad-continuation
+disable=F0401,C0330
