@@ -418,9 +418,9 @@ def get_recently_updated_images():
     if not g.is_admin:
         raise UserNotAdmin()
 
-    if request.form.get("updated_since"):
+    if "updated_since" in request.args:
         updated_since = datetime.datetime.utcfromtimestamp(
-            int(request.form["updated_since"]))
+            int(request.args["updated_since"]))
     else:
         updated_since = None
 
