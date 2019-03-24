@@ -107,7 +107,7 @@ def update_restaurant(restaurant_id):
     if "approval_status" in request.form:
         if request.form['approval_status'] == "approved":
             fbuser = db.session.query(FBUser).get_or_404(
-                item_image.submitter_id)
+                restaurant.submitter_id)
             fbuser.points = fbuser.points + 50
 
     db.session.commit()
