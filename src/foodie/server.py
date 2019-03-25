@@ -108,7 +108,7 @@ def update_restaurant(restaurant_id):
         setattr(restaurant, k, v)
 
     if g.is_admin and "approval_status" in request.form:
-        if request.form['approval_status'] == "approved":
+        if request.form['approval_status'] == "approved" and restaurant.approvel_status != ApprovalStatus.approved:
             fbuser = db.session.query(FBUser).get_or_404(
                 restaurant.submitter_id)
             fbuser.points = fbuser.points + 50
@@ -269,7 +269,7 @@ def update_item_image_approval(restaurant_id, menu_item_id):
                                                          menu_item_id))
     item_image.approval_status = request.form['approval_status']
 
-    if request.form['approval_status'] == "approved":
+    if request.form['approval_status'] == "approved" and item_image.approval_status != ApprovalStatus.approved:
         fbuser = db.session.query(FBUser).get_or_404(item_image.submitter_id)
         fbuser.points = fbuser.points + 50
     db.session.commit()
