@@ -98,7 +98,7 @@ def get_restaurant(restaurant_id):
 @APP.route('/restaurant/<restaurant_id>', methods=['PUT'])
 def update_restaurant(restaurant_id):
     restaurant = database.get_restaurant_by_id(restaurant_id)
-    ensure_proper_submitter_for_delete(restaurant)
+    ensure_proper_submitter_for_delete(restaurant.submitter_id)
 
     if not g.is_admin and restaurant.approval_status == ApprovalStatus.approved:
         raise InvalidUsage(
