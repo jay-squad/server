@@ -111,6 +111,16 @@ def get_menu_item_by_name(menu_item_name):
         .join(ItemImage).all()
 
 
+def get_menu_item_by_names(menu_item_names):
+    name_filters = [
+        MenuItem.name.ilike('%%%s%%' % menu_item_name)
+        for menu_item_name in menu_item_names
+    ]
+    return db.session.query(MenuItem, ItemImage)\
+    .filter(or_(*name_filters))\
+        .join(ItemImage).all()
+
+
 def get_menu_section_contents(restaurant_id, section_name):
     return db.session.query(MenuItem, ItemImage) \
         .join(ItemImage) \
