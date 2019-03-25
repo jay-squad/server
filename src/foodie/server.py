@@ -104,11 +104,12 @@ def update_restaurant(restaurant_id):
         raise InvalidUsage(
             "User may not update a restaurant that was already approved!")
 
+    prior_approval_status = restaurant.approval_status
     for k, v in request.form.items():
         setattr(restaurant, k, v)
 
     if g.is_admin and "approval_status" in request.form:
-        if request.form['approval_status'] == "approved" and restaurant.approvel_status != ApprovalStatus.approved:
+        if restaurant.approval_status == Approval_status.approved and prior_approval_status != ApprovalStatus.approved:
             fbuser = db.session.query(FBUser).get_or_404(
                 restaurant.submitter_id)
             fbuser.points = fbuser.points + 50
@@ -267,11 +268,10 @@ def update_item_image_approval(restaurant_id, menu_item_id):
     link = request.form['item_image']
     item_image = db.session.query(ItemImage).get_or_404((link, restaurant_id,
                                                          menu_item_id))
-    item_image.approval_status = request.form['approval_status']
-
     if request.form['approval_status'] == "approved" and item_image.approval_status != ApprovalStatus.approved:
         fbuser = db.session.query(FBUser).get_or_404(item_image.submitter_id)
         fbuser.points = fbuser.points + 50
+    item_image.approval_status = request.form['approval_status']
     db.session.commit()
     return jsonify(success=True)
 
