@@ -103,6 +103,13 @@ def update_restaurant(restaurant_id):
     restaurant = database.get_restaurant_by_id(restaurant_id)
     for k, v in request.form.items():
         setattr(restaurant, k, v)
+
+    if "approval_status" in request.form:
+        if request.form['approval_status'] == "approved":
+            fbuser = db.session.query(FBUser).get_or_404(
+                restaurant.submitter_id)
+            fbuser.points = fbuser.points + 50
+
     db.session.commit()
     return jsonify(marshmallow_schema.RestaurantSchema().dump(restaurant).data)
 
@@ -411,9 +418,9 @@ def get_recently_updated_images():
     if not g.is_admin:
         raise UserNotAdmin()
 
-    if request.form.get("updated_since"):
+    if "updated_since" in request.args:
         updated_since = datetime.datetime.utcfromtimestamp(
-            int(request.form["updated_since"]))
+            int(request.args["updated_since"]))
     else:
         updated_since = None
 
