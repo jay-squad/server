@@ -7,7 +7,7 @@ from marshmallow_enum import EnumField
 
 
 def titlecase(s):
-    return re.sub(r"[A-Za-z]+('[A-Za-z]+)?",
+    return re.sub(r"[A-Za-z]+(['’][A-Za-z]+)?",
                   lambda mo: mo.group(0)[0].upper() + mo.group(0)[1:].lower(),
                   s)
 

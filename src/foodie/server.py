@@ -97,18 +97,24 @@ def get_restaurant(restaurant_id):
 
 @APP.route('/restaurant/<restaurant_id>', methods=['PUT'])
 def update_restaurant(restaurant_id):
-    if not g.is_admin:
-        raise UserNotAdmin()
-
     restaurant = database.get_restaurant_by_id(restaurant_id)
+    ensure_proper_submitter_for_delete(restaurant.submitter_id)
+
+    if not g.is_admin and restaurant.approval_status == ApprovalStatus.approved:
+        raise InvalidUsage(
+            "User may not update a restaurant that was already approved!")
+
+    prior_approval_status = restaurant.approval_status
     for k, v in request.form.items():
         setattr(restaurant, k, v)
 
-    if "approval_status" in request.form:
-        if request.form['approval_status'] == "approved":
+    if g.is_admin and "approval_status" in request.form:
+        if restaurant.approval_status == Approval_status.approved and prior_approval_status != ApprovalStatus.approved:
             fbuser = db.session.query(FBUser).get_or_404(
                 restaurant.submitter_id)
             fbuser.points = fbuser.points + 50
+    elif not g.is_admin:
+        restaurant.approval_status = ApprovalStatus.pending
 
     db.session.commit()
     return jsonify(marshmallow_schema.RestaurantSchema().dump(restaurant).data)
@@ -262,11 +268,10 @@ def update_item_image_approval(restaurant_id, menu_item_id):
     link = request.form['item_image']
     item_image = db.session.query(ItemImage).get_or_404((link, restaurant_id,
                                                          menu_item_id))
-    item_image.approval_status = request.form['approval_status']
-
-    if request.form['approval_status'] == "approved":
+    if request.form['approval_status'] == "approved" and item_image.approval_status != ApprovalStatus.approved:
         fbuser = db.session.query(FBUser).get_or_404(item_image.submitter_id)
         fbuser.points = fbuser.points + 50
+    item_image.approval_status = request.form['approval_status']
     db.session.commit()
     return jsonify(success=True)
 
@@ -360,13 +365,17 @@ def search_restaurant(query):
 
 
 def query_items(query, pagination_limit):
-    item_image_pairs = [{
-        "item":
-        marshmallow_schema.MenuItemSchema().dump(item).data,
-        "image":
-        marshmallow_schema.ItemImageSchema().dump(image).data
-    } for item, image in search.find_menu_item(query)
-                        if approved_or_admin(image)]
+    item_image_pairs = [
+        {
+            "item":
+            marshmallow_schema.MenuItemSchema().dump(item).data,
+            "image":
+            marshmallow_schema.ItemImageSchema().dump(image).data,
+            "restaurant":
+            marshmallow_schema.RestaurantSchema().dump(restaurant).data
+        } for item, image, restaurant in search.find_menu_item(query)
+        if approved_or_admin(image) and approved_or_admin(restaurant)
+    ]
     if pagination_limit:
         return paginate_results(item_image_pairs, int(pagination_limit))
     else:
