@@ -365,13 +365,17 @@ def search_restaurant(query):
 
 
 def query_items(query, pagination_limit):
-    item_image_pairs = [{
-        "item":
-        marshmallow_schema.MenuItemSchema().dump(item).data,
-        "image":
-        marshmallow_schema.ItemImageSchema().dump(image).data
-    } for item, image in search.find_menu_item(query)
-                        if approved_or_admin(image)]
+    item_image_pairs = [
+        {
+            "item":
+            marshmallow_schema.MenuItemSchema().dump(item).data,
+            "image":
+            marshmallow_schema.ItemImageSchema().dump(image).data,
+            "restaurant":
+            marshmallow_schema.RestaurantSchema().dump(restaurant).data
+        } for item, image, restaurant in search.find_menu_item(query)
+        if approved_or_admin(image) and approved_or_admin(restaurant)
+    ]
     if pagination_limit:
         return paginate_results(item_image_pairs, int(pagination_limit))
     else:

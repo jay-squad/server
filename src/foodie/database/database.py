@@ -96,7 +96,8 @@ def get_restaurant_by_id(restaurant_id):
 
 def get_restaurant_by_name(restaurant_name):
     return db.session.query(Restaurant)\
-        .filter(or_(Restaurant.name.ilike('%%%s%%' % restaurant_name), Restaurant.cuisine_type.ilike('%%%s%%' % restaurant_name))).all()
+        .filter(or_(Restaurant.name.ilike('%%%s%%' % restaurant_name),
+                    Restaurant.cuisine_type.ilike('%%%s%%' % restaurant_name))).all()
 
 
 def get_menu_item_by_id(restaurant_id, menu_item_id):
@@ -106,9 +107,13 @@ def get_menu_item_by_id(restaurant_id, menu_item_id):
 
 
 def get_menu_item_by_name(menu_item_name):
-    return db.session.query(MenuItem, ItemImage)\
+    return db.session.query(MenuItem, ItemImage, Restaurant)\
+    .join(ItemImage)\
+    .filter(Menuitem.id == ItemImage.menu_item_id) \
+    .join(Restaurant)\
+    .filter(MenuItem.restaurant_id == Restaurant.id) \
     .filter(MenuItem.name.ilike('%%%s%%' % menu_item_name))\
-        .join(ItemImage).all()
+        .all()
 
 
 def get_menu_item_by_names(menu_item_names):
@@ -116,9 +121,13 @@ def get_menu_item_by_names(menu_item_names):
         MenuItem.name.ilike('%%%s%%' % menu_item_name)
         for menu_item_name in menu_item_names
     ]
-    return db.session.query(MenuItem, ItemImage)\
+    return db.session.query(MenuItem, ItemImage, Restaurant)\
+    .join(ItemImage)\
+    .filter(MenuItem.id == ItemImage.menu_item_id) \
+    .join(Restaurant)\
+    .filter(MenuItem.restaurant_id == Restaurant.id) \
     .filter(or_(*name_filters))\
-        .join(ItemImage).all()
+     .all()
 
 
 def get_menu_section_contents(restaurant_id, section_name):
