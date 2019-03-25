@@ -97,18 +97,23 @@ def get_restaurant(restaurant_id):
 
 @APP.route('/restaurant/<restaurant_id>', methods=['PUT'])
 def update_restaurant(restaurant_id):
-    if not g.is_admin:
-        raise UserNotAdmin()
-
     restaurant = database.get_restaurant_by_id(restaurant_id)
+    ensure_proper_submitter_for_delete(restaurant)
+
+    if not g.is_admin and restaurant.approval_status == ApprovalStatus.approved:
+        raise InvalidUsage(
+            "User may not update a restaurant that was already approved!")
+
     for k, v in request.form.items():
         setattr(restaurant, k, v)
 
-    if "approval_status" in request.form:
+    if g.is_admin and "approval_status" in request.form:
         if request.form['approval_status'] == "approved":
             fbuser = db.session.query(FBUser).get_or_404(
                 restaurant.submitter_id)
             fbuser.points = fbuser.points + 50
+    elif not g.is_admin:
+        restaurant.approval_status = ApprovalStatus.pending
 
     db.session.commit()
     return jsonify(marshmallow_schema.RestaurantSchema().dump(restaurant).data)
